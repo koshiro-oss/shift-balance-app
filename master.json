@@ -1,0 +1,36 @@
+{
+    "workplaces": {
+        "ミスド": {
+            "hourly_wage": 1200,
+            "closing_day": 20,
+            "pay_day": 5,
+            "color": "#fcc308"
+        },
+        "コールセンター": {
+            "hourly_wage": 1300,
+            "closing_day": "month_end",
+            "pay_day": "month_end",
+            "color": "#5688f5"
+        },
+        "洋食屋": {
+            "hourly_wage": 1150.0,
+            "closing_day": 20,
+            "pay_day": 5,
+            "color": "#b70ba9"
+        }
+    },
+    "expense_colors": {
+        "食費": "#FFA500",
+        "交通費": "#000080",
+        "部活関連": "#FF0000",
+        "交際費": "#FFC0CB",
+        "ファッション": "#c293ed",
+        "ヘアケア": "#fa83f5",
+        "スキンケア": "#26a4d4",
+        "医療費": "#1bfb53",
+        "遊び": "#fcf808",
+        "旅行": "skyblue",
+        "日用品": "#8df696",
+        "勉強": "#e87840"
+    }
+}
