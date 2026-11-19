@@ -4,6 +4,7 @@ from datetime import date
 import calendar as py_calendar
 from streamlit_calendar import calendar as st_calendar
 import uuid
+import os
 
 st.title("収支管理アプリ")
 
@@ -22,9 +23,14 @@ def save_master(workplaces, expense_colors):
         json.dump(master,file,ensure_ascii=False,indent=4)
 
 def load_data():
+
+    if not os.path.exists("data.json"):
+        
+        return {"current_balance": 0,"shifts": [],"expenses": []}
+
     with open("data.json", "r", encoding="utf-8") as file:
         data = json.load(file)
-    
+
     updated = False
 
     # 既存のシフトにUUIDを追加
@@ -39,7 +45,6 @@ def load_data():
             expense["id"] = str(uuid.uuid4())
             updated = True
 
-    # UUIDを追加した場合だけJSONを更新
     if updated:
         save_data(data["current_balance"],data["shifts"],data["expenses"])
 
@@ -70,6 +75,10 @@ with tab1:
     #収支計算
     st.subheader("収支計算")
     months = []
+    months = sorted(list(set([shift["pay_date"][:7] for shift in shifts] + [expense["due_date"][:7] for expense in expenses])))
+
+    if not months:
+        months = [date.today().strftime("%Y-%m")]
     year = date.today().year
     month = date.today().month
     for i in range(12):
