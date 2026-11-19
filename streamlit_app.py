@@ -5,6 +5,13 @@ import calendar as py_calendar
 from streamlit_calendar import calendar as st_calendar
 import uuid
 import os
+from supabase import create_client
+
+SUPABASE_URL = st.secrets["SUPABASE_URL"]
+SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
+
+supabase = create_client(SUPABASE_URL,SUPABASE_KEY)
+st.write("Supabase接続OK")
 
 st.title("収支管理アプリ")
 
