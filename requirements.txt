@@ -1,3 +1,3 @@
 streamlit
 streamlit-calendar
-supabase
+supabase-py

@@ -12,7 +12,14 @@ SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
 
 supabase = create_client(SUPABASE_URL,SUPABASE_KEY)
 st.write("Supabase接続OK")
+result = (
+    supabase
+    .table("app_settings")
+    .select("*")
+    .execute()
+)
 
+st.write(result.data)
 st.title("収支管理アプリ")
 
 #save_data, load_data定義
