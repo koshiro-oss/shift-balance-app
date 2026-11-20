@@ -289,12 +289,6 @@ with tab3:
                 save_data(current_balance,shifts,expenses)
                 st.rerun()
 
-        expense_id = expense["id"]
-        if st.button("支出削除",key=f"expense_delete_{expense_id}"):
-            expenses[:] = [e for e in expenses
-                           if e["id"] != expense_id]
-            save_data(current_balance, shifts, expenses)
-            st.rerun()
     #出費入力
     purpose = st.selectbox("項目",list(EXPENSES_COLORS.keys()))
     memo = st.text_input("メモ")
@@ -602,12 +596,13 @@ calendar_state = st_calendar(
  #calendar_state：クリックされたイベントの情報を受け取る
 
 ###-----イベントの判定はカレンダー側、表示内容の決定は関数側-----###
-
+st.write(calendar_state)
 # イベントクリック時の処理
 if calendar_state and calendar_state.get("callback") == "eventClick":
 
     clicked_event = calendar_state["eventClick"]["event"]
     clicked_id = clicked_event["id"]
+
 
     # シフトがクリックされた場合
     if clicked_id.startswith("shift_"):
