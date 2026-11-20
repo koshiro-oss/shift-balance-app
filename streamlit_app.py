@@ -247,7 +247,7 @@ with tab2:
     sorted_shifts = sorted(shifts,key=lambda x: x["work_date"],reverse=True)
     current_date = None
     
-    for shift in shifts:
+    for shift in sorted_shifts:
     # 日付が変わったら見出し表示
         if shift["work_date"] != current_date:
             current_date = shift["work_date"]
@@ -259,21 +259,18 @@ with tab2:
 
         with st.container(border=True):
             st.markdown(f"<span style='color:{color}; font-size:20px;'>"f"{shift['workplace']}"f"</span>",unsafe_allow_html=True)
-        st.write(f"⏰ {float_to_time(shift['start_time'])}"f" ～ "f"{float_to_time(shift['end_time'])}")
-        st.write(f"🕒 {work_hours:.1f}時間勤務")
-        st.write(f"💰 {shift['salary']}円")
-        st.write(f"振込日：{shift['pay_date']}")
-
-        shift_id = shift["id"]
-
-        if st.button("削除",key=f"delete_{shift_id}"):
-
-            shifts[:] = [s for s in shifts
+            st.write(f"⏰ {float_to_time(shift['start_time'])}"f" ～ "f"{float_to_time(shift['end_time'])}")
+            st.write(f"🕒 {work_hours:.1f}時間勤務")
+            st.write(f"💰 {shift['salary']}円")
+            st.write(f"振込日：{shift['pay_date']}")
+            
+            shift_id = shift["id"]
+            
+            if st.button("削除",key=f"delete_{shift_id}"):
+                shifts[:] = [s for s in shifts
                          if s["id"] != shift_id]
-
-            save_data(current_balance,shifts,expenses)
-
-            st.rerun()    
+                save_data(current_balance,shifts,expenses)
+                st.rerun()    
 
 
     
