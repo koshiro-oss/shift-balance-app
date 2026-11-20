@@ -602,7 +602,9 @@ if calendar_state and calendar_state.get("callback") == "eventClick":
 
     clicked_event = calendar_state["eventClick"]["event"]
     clicked_id = clicked_event["id"]
-
+    if st.session_state.get("last_clicked_id") == clicked_id:
+        st.stop()
+    st.session_state["last_clicked_id"] = clicked_id
 
     # シフトがクリックされた場合
     if clicked_id.startswith("shift_"):
