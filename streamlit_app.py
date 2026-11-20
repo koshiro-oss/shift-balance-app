@@ -175,46 +175,7 @@ with tab2:
     st.metric("収入予定",f"{monthly_income}円")
     for wp in list(WORKPLACES.keys()):
         st.write(f"{wp}の収入:"f"{workplace_incomes[wp]}円")
-
-    def float_to_time(value):
-        hour = int(value)
-        minute = round((value - hour) * 60)
-        return datetime.strptime(f"{hour:02d}:{minute:02d}","%H:%M").time()
-
-    sorted_shifts = sorted(shifts,key=lambda x: x["work_date"],reverse=True)
-    current_date = None
-    
-    for shift in shifts:
-    # 日付が変わったら見出し表示
-        if shift["work_date"] != current_date:
-            current_date = shift["work_date"]
-            st.divider()
-            st.markdown(f"## 📅 {current_date}")
-        
-        color = WORKPLACES[shift["workplace"]]["color"]
-        work_hours = (shift["end_time"] - shift["start_time"] - shift["break_minutes"] / 60)
-
-        with st.container(border=True):
-            st.markdown(f"<span style='color:{color}; font-size:20px;'>"f"{shift['workplace']}"f"</span>",unsafe_allow_html=True)
-        st.write(f"⏰ {float_to_time(shift['start_time'])}"f" ～ "f"{float_to_time(shift['end_time'])}")
-        st.write(f"🕒 {work_hours:.1f}時間勤務")
-        st.write(f"💰 {shift['salary']}円")
-        st.write(f"振込日：{shift['pay_date']}")
-
-        shift_id = shift["id"]
-
-        if st.button("削除",key=f"delete_{shift_id}"):
-
-            shifts[:] = [s for s in shifts
-                         if s["id"] != shift_id]
-
-            save_data(current_balance,shifts,expenses)
-
-            st.rerun()    
-
-
-
-    #シフト入力
+#シフト入力
     workplace = st.selectbox("勤務先",list(WORKPLACES.keys()))
     work_date = st.date_input("勤務日")
     start_hour = st.selectbox("開始時間",list(range(24)))
@@ -278,6 +239,42 @@ with tab2:
         save_data(current_balance,shifts, expenses)
         
         st.write("登録しました")
+    def float_to_time(value):
+        hour = int(value)
+        minute = round((value - hour) * 60)
+        return datetime.strptime(f"{hour:02d}:{minute:02d}","%H:%M").time()
+
+    sorted_shifts = sorted(shifts,key=lambda x: x["work_date"],reverse=True)
+    current_date = None
+    
+    for shift in shifts:
+    # 日付が変わったら見出し表示
+        if shift["work_date"] != current_date:
+            current_date = shift["work_date"]
+            st.divider()
+            st.markdown(f"## 📅 {current_date}")
+        
+        color = WORKPLACES[shift["workplace"]]["color"]
+        work_hours = (shift["end_time"] - shift["start_time"] - shift["break_minutes"] / 60)
+
+        with st.container(border=True):
+            st.markdown(f"<span style='color:{color}; font-size:20px;'>"f"{shift['workplace']}"f"</span>",unsafe_allow_html=True)
+        st.write(f"⏰ {float_to_time(shift['start_time'])}"f" ～ "f"{float_to_time(shift['end_time'])}")
+        st.write(f"🕒 {work_hours:.1f}時間勤務")
+        st.write(f"💰 {shift['salary']}円")
+        st.write(f"振込日：{shift['pay_date']}")
+
+        shift_id = shift["id"]
+
+        if st.button("削除",key=f"delete_{shift_id}"):
+
+            shifts[:] = [s for s in shifts
+                         if s["id"] != shift_id]
+
+            save_data(current_balance,shifts,expenses)
+
+            st.rerun()    
+
 
     
 #出費入力専用画面
