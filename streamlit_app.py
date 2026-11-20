@@ -1,6 +1,6 @@
 import streamlit as st
 import json
-from datetime import date
+from datetime import datetime, date
 import calendar as py_calendar
 from streamlit_calendar import calendar as st_calendar
 import uuid
@@ -262,7 +262,7 @@ def float_to_time(value):
     hour = int(value)
     minute = round((value - hour) * 60)
 
-    return date.strptime(f"{hour:02d}:{minute:02d}","%H:%M").time()
+    return datetime.strptime(f"{hour:02d}:{minute:02d}","%H:%M").time()
     
 #出費入力専用画面
 with tab3:
@@ -442,7 +442,7 @@ def show_event_detail(event_type, record):
 
                 workplace = st.selectbox("勤務先",list(WORKPLACES.keys()),index=list(WORKPLACES.keys()).index(record["workplace"]))
 
-                work_date = st.date_input("勤務日",value=date.strptime(record["work_date"], "%Y-%m-%d").date())
+                work_date = st.date_input("勤務日",value=datetime.strptime(record["work_date"], "%Y-%m-%d").date())
 
                 start_time = st.time_input("開始時間",value=float_to_time(record["start_time"]))
 
@@ -485,7 +485,7 @@ def show_event_detail(event_type, record):
 
                 purpose = st.selectbox("項目",list(EXPENSES_COLORS.keys()),index=list(EXPENSES_COLORS.keys()).index(record["purpose"]))
 
-                due_date = st.date_input("使用日",value=date.strptime(record["due_date"], "%Y-%m-%d").date())
+                due_date = st.date_input("使用日",value=datetime.strptime(record["due_date"], "%Y-%m-%d").date())
 
                 amount = st.number_input("料金",min_value=0,value=int(record["amount"]),step=100)
 
