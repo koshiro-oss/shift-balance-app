@@ -180,26 +180,38 @@ with tab2:
         hour = int(value)
         minute = round((value - hour) * 60)
         return datetime.strptime(f"{hour:02d}:{minute:02d}","%H:%M").time()
+
+    sorted_shifts = sorted(shifts,key=lambda x: x["work_date"],reverse=True)
+    current_date = None
     
     for shift in shifts:
-        color = WORKPLACES[shift["workplace"]]["color"]
-        work_hours = (shift["end_time"]- shift["start_time"]- shift["break_minutes"] / 60)
+    # 日付が変わったら見出し表示
+        if shift["work_date"] != current_date:
+            current_date = shift["work_date"]
+            st.divider()
+            st.markdown(f"## 📅 {current_date}")
         
+        color = WORKPLACES[shift["workplace"]]["color"]
+        work_hours = (shift["end_time"] - shift["start_time"] - shift["break_minutes"] / 60)
+
         with st.container(border=True):
             st.markdown(f"<span style='color:{color}; font-size:20px;'>"f"{shift['workplace']}"f"</span>",unsafe_allow_html=True)
-            st.write(f"📅 {shift['work_date']}")
-            st.write(f"⏰ {float_to_time(shift['start_time'])}"f" ～ "f"{float_to_time(shift['end_time'])}")
-            st.write(f"🕒 {work_hours:.1f}時間勤務")
-            st.write(f"💰 {shift['salary']}円")
-            st.write(f"振込日：{shift['pay_date']}")
-            
-            shift_id = shift["id"]
-            
-            if st.button("削除",key=f"delete_{shift_id}"):
-                shifts[:] = [s for s in shifts
-                             if s["id"] != shift_id]
-                save_data(current_balance,shifts,expenses)
-                st.rerun()
+        st.write(f"⏰ {float_to_time(shift['start_time'])}"f" ～ "f"{float_to_time(shift['end_time'])}")
+        st.write(f"🕒 {work_hours:.1f}時間勤務")
+        st.write(f"💰 {shift['salary']}円")
+        st.write(f"振込日：{shift['pay_date']}")
+
+        shift_id = shift["id"]
+
+        if st.button("削除",key=f"delete_{shift_id}"):
+
+            shifts[:] = [s for s in shifts
+                         if s["id"] != shift_id]
+
+            save_data(current_balance,shifts,expenses)
+
+            st.rerun()    
+
 
 
     #シフト入力
@@ -303,6 +315,7 @@ with tab3:
 
         st.write("登録しました")
 
+    st.subheader("登録済み支出")
     for expense in sorted_expenses:
         # 日付が変わったら見出し表示
         if expense["due_date"] != current_date:
