@@ -272,24 +272,12 @@ with tab2:
 with tab3:
     st.subheader("登録済み支出")
     st.metric("支出予定",f"{monthly_expense}円")
-    for expense in expenses:
-        color = EXPENSES_COLORS[expense["purpose"]]
-        with st.container(border=True):
-            st.markdown(f"<span style='color:{color}; font-size:20px;'>"f"{expense['purpose']}"f"</span>",unsafe_allow_html=True)
-            st.write(f"📅 {expense['due_date']}")
-            
-            if expense.get("memo"):
-                st.write(f"📝 {expense['memo']}")
-            st.write(f"💰 {expense['amount']}円")
-            
-            expense_id = expense["id"]
-            if st.button("削除",key=f"expense_delete_{expense_id}"):
-                expenses[:] = [e for e in expenses
-                               if e["id"] != expense_id]
-                save_data(current_balance,shifts,expenses)
-                st.rerun()
-
+    
+    sorted_expenses = sorted(expenses,key=lambda x: x["due_date"],reverse=True)
+    current_date = None
+    
     #出費入力
+    st.subheader("新規支出登録")
     purpose = st.selectbox("項目",list(EXPENSES_COLORS.keys()))
     memo = st.text_input("メモ")
     due_date = st.date_input("使用日")
@@ -314,6 +302,29 @@ with tab3:
         save_data(current_balance, shifts, expenses)
 
         st.write("登録しました")
+
+    for expense in sorted_expenses:
+        # 日付が変わったら見出し表示
+        if expense["due_date"] != current_date:
+            current_date = expense["due_date"]
+            st.divider()
+            st.markdown(f"## 📅 {current_date}")
+
+        color = EXPENSES_COLORS[expense["purpose"]]
+        with st.container(border=True):
+            st.markdown(f"<span style='color:{color}; font-size:20px;'>"f"{expense['purpose']}"f"</span>",unsafe_allow_html=True)
+            
+            if expense.get("memo"):
+                st.write(f"📝 {expense['memo']}")
+            st.write(f"💰 {expense['amount']}円")
+            
+            expense_id = expense["id"]
+            if st.button("削除",key=f"expense_delete_{expense_id}"):
+                expenses[:] = [e for e in expenses
+                               if e["id"] != expense_id]
+                save_data(current_balance,shifts,expenses)
+                st.rerun()
+
 
 with tab4:
     
