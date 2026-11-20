@@ -175,23 +175,32 @@ with tab2:
     st.metric("収入予定",f"{monthly_income}円")
     for wp in list(WORKPLACES.keys()):
         st.write(f"{wp}の収入:"f"{workplace_incomes[wp]}円")
+
+    def float_to_time(value):
+        hour = int(value)
+        minute = round((value - hour) * 60)
+        return datetime.strptime(f"{hour:02d}:{minute:02d}","%H:%M").time()
     
     for shift in shifts:
-        st.write("---")
         color = WORKPLACES[shift["workplace"]]["color"]
-        st.markdown(f"<span style='color:{color}'>"f"勤務地:{shift['workplace']}"f"</span>",unsafe_allow_html=True)
-        st.write(f"振込月:{shift['pay_date'][5:7]}月")
-        st.write(f"給与:{shift['salary']}円")
-
-        shift_id = shift["id"]
-
-        if st.button("シフト削除", key=f"delete_{shift_id}"):
-
-            shifts[:] = [s for s in shifts
-                         if s["id"] != shift_id]
+        work_hours = (shift["end_time"]- shift["start_time"]- shift["break_minutes"] / 60)
+        
+        with st.container(border=True):
+            st.markdown(f"<span style='color:{color}; font-size:20px;'>"f"{shift['workplace']}"f"</span>",unsafe_allow_html=True)
+            st.write(f"📅 {shift['work_date']}")
+            st.write(f"⏰ {float_to_time(shift['start_time'])}"f" ～ "f"{float_to_time(shift['end_time'])}")
+            st.write(f"🕒 {work_hours:.1f}時間勤務")
+            st.write(f"💰 {shift['salary']}円")
+            st.write(f"振込日：{shift['pay_date']}")
             
-            save_data(current_balance, shifts, expenses)
-            st.rerun()
+            shift_id = shift["id"]
+            
+            if st.button("削除",key=f"delete_{shift_id}"):
+                shifts[:] = [s for s in shifts
+                             if s["id"] != shift_id]
+                save_data(current_balance,shifts,expenses)
+                st.rerun()
+
 
     #シフト入力
     workplace = st.selectbox("勤務先",list(WORKPLACES.keys()))
@@ -258,21 +267,27 @@ with tab2:
         
         st.write("登録しました")
 
-def float_to_time(value):
-    hour = int(value)
-    minute = round((value - hour) * 60)
-
-    return datetime.strptime(f"{hour:02d}:{minute:02d}","%H:%M").time()
     
 #出費入力専用画面
 with tab3:
     st.subheader("登録済み支出")
     st.metric("支出予定",f"{monthly_expense}円")
-    for expense in expenses:#enumerateは、リストの中の各要素に番号ふるイメージ（コンビニ:0,ミスド:1）
-    
-        st.write("---")
-        st.write(f"項目:{expense['purpose']}")
-        st.write(f"料金:{expense['amount']}円")
+    for expense in expenses:
+        color = EXPENSES_COLORS[expense["purpose"]]
+        with st.container(border=True):
+            st.markdown(f"<span style='color:{color}; font-size:20px;'>"f"{expense['purpose']}"f"</span>",unsafe_allow_html=True)
+            st.write(f"📅 {expense['due_date']}")
+            
+            if expense.get("memo"):
+                st.write(f"📝 {expense['memo']}")
+            st.write(f"💰 {expense['amount']}円")
+            
+            expense_id = expense["id"]
+            if st.button("削除",key=f"expense_delete_{expense_id}"):
+                expenses[:] = [e for e in expenses
+                               if e["id"] != expense_id]
+                save_data(current_balance,shifts,expenses)
+                st.rerun()
 
         expense_id = expense["id"]
         if st.button("支出削除",key=f"expense_delete_{expense_id}"):
@@ -282,18 +297,20 @@ with tab3:
             st.rerun()
     #出費入力
     purpose = st.selectbox("項目",list(EXPENSES_COLORS.keys()))
+    memo = st.text_input("メモ")
     due_date = st.date_input("使用日")
     amount = st.number_input("料金")
     #内容表示
     st.write("出費")
     st.write("項目:",purpose)
+    st.write("メモ:",memo)
     st.write("使用日:",due_date)
     st.write("料金:",amount)
 
     register2 = st.button("支出登録")
 
     if register2:
-        new_expenses = {"id": str(uuid.uuid4()),"purpose": purpose,"due_date": str(due_date),"amount": int(amount)}
+        new_expenses = {"id": str(uuid.uuid4()),"purpose": purpose,"memo": memo,"due_date": str(due_date),"amount": int(amount)}
 
         data = load_data()
         shifts = data["shifts"]
@@ -441,15 +458,10 @@ def show_event_detail(event_type, record):
             with st.form("shift_edit_form"):
 
                 workplace = st.selectbox("勤務先",list(WORKPLACES.keys()),index=list(WORKPLACES.keys()).index(record["workplace"]))
-
                 work_date = st.date_input("勤務日",value=datetime.strptime(record["work_date"], "%Y-%m-%d").date())
-
                 start_time = st.time_input("開始時間",value=float_to_time(record["start_time"]))
-
                 end_time = st.time_input("終了時間",value=float_to_time(record["end_time"]))
-
                 break_minutes = st.selectbox("休憩時間",[0, 15, 30, 45],index=[0, 15, 30, 45].index(record["break_minutes"]))
-
                 submitted = st.form_submit_button("変更を保存")
 
                 if submitted:
@@ -484,11 +496,9 @@ def show_event_detail(event_type, record):
             with st.form("expense_edit_form"):
 
                 purpose = st.selectbox("項目",list(EXPENSES_COLORS.keys()),index=list(EXPENSES_COLORS.keys()).index(record["purpose"]))
-
+                memo = st.text_input("メモ",value=record.get("memo", ""))
                 due_date = st.date_input("使用日",value=datetime.strptime(record["due_date"], "%Y-%m-%d").date())
-
                 amount = st.number_input("料金",min_value=0,value=int(record["amount"]),step=100)
-
                 submitted = st.form_submit_button("変更を保存")
 
                 if submitted:
@@ -532,6 +542,7 @@ def show_event_detail(event_type, record):
             st.subheader("支出詳細")
 
             st.write("項目:", record["purpose"])
+            st.write("メモ:",record['memo'])
             st.write("使用日:", record["due_date"])
             st.write("金額:", record["amount"])
 
