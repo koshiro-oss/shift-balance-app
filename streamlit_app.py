@@ -31,6 +31,17 @@ def load_shifts():
 def delete_shift(record_id):
 
     (supabase.table("shifts").delete().eq("id", record_id).execute())
+def update_shift(shift):
+    (supabase.table("shifts").update({
+            "workplace": shift["workplace"],
+            "work_date": shift["work_date"],
+            "pay_date": shift["pay_date"],
+            "start_time": shift["start_time"],
+            "end_time": shift["end_time"],
+            "break_minutes": shift["break_minutes"],
+            "hourly_wage": shift["hourly_wage"],
+            "salary": shift["salary"]
+        }).eq("id", shift["id"]).execute())
 def save_expense(expense):
 
     (supabase.table("expenses").insert(expense).execute())
@@ -42,6 +53,13 @@ def load_expenses():
 def delete_expense(record_id):
 
     (supabase.table("expenses").delete().eq("id", record_id).execute())
+def update_expense(expense):
+    (supabase.table("expenses").update({
+            "purpose": expense["purpose"],
+            "memo": expense.get("memo", ""),
+            "due_date": expense["due_date"],
+            "amount": expense["amount"]
+        }).eq("id", expense["id"]).execute())
 def save_master(workplaces, expense_colors):
 
     master = {"workplaces": workplaces,"expense_colors": expense_colors}
@@ -509,7 +527,7 @@ def show_event_detail(event_type, record):
                         record.update({"workplace": workplace,"work_date": str(work_date),"start_time": start_hour,"end_time": end_hour,"break_minutes": break_minutes,
                                        "hourly_wage": hourly_wage,"salary": salary,"pay_date": str(pay_date)})
 
-                        save_data(current_balance, shifts, expenses)
+                        update_shift(record)
 
                         st.session_state[edit_key] = False
                         st.success("変更を保存しました！")
@@ -529,9 +547,9 @@ def show_event_detail(event_type, record):
 
                 if submitted:
 
-                    record.update({"purpose": purpose,"due_date": str(due_date),"amount": int(amount)})
+                    record.update({"purpose": purpose,"memo": memo,"due_date": str(due_date),"amount": int(amount)})
 
-                    save_data(current_balance, shifts, expenses)
+                    update_expense(record)
 
                     st.session_state[edit_key] = False
                     st.success("変更を保存しました！")
