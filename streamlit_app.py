@@ -189,7 +189,7 @@ with tab1:
     balance = calculate_balance(monthly_income, monthly_expense, target_month)
 
     future_balance = current_balance + balance
-    st.metric("予想残高:",f"{future_balance}円") 
+    st.metric("月末の予想残高:",f"{future_balance}円") 
     col1, col2, col3 = st.columns(3)
     with col1:
         st.metric("収入予定",f"{monthly_income}円")
