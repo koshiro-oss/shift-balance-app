@@ -20,6 +20,15 @@ def save_data(current_balance,shifts, expenses):
             json.dump(data,file,ensure_ascii=False,indent=4)
             
             print("保存しました")
+def save_shift(shift):
+
+    (supabase.table("shifts").insert(shift).execute())
+
+def load_shifts():
+
+    result = (supabase.table("shifts").select("*").execute())
+
+    return result.data
 
 def save_master(workplaces, expense_colors):
 
@@ -183,6 +192,7 @@ with tab2:
     st.metric("収入予定",f"{monthly_income}円")
     for wp in list(WORKPLACES.keys()):
         st.write(f"{wp}の収入:"f"{workplace_incomes[wp]}円")
+    st.write(load_shifts())
 #シフト入力
     workplace = st.selectbox("勤務先",list(WORKPLACES.keys()))
     work_date = st.date_input("勤務日")
@@ -240,11 +250,10 @@ with tab2:
         new_shifts = {"id": str(uuid.uuid4()),"workplace": workplace, "work_date": str(work_date), "pay_date": str(pay_date), "start_time": start_time, "end_time": end_time, "break_minutes": break_minutes, "hourly_wage": hourly_wage, "salary":salary}
     
         data = load_data()
-        shifts = data["shifts"]
+
+        shifts = load_shifts()
         expenses = data["expenses"]
-        shifts.append(new_shifts)
-        
-        save_data(current_balance,shifts, expenses)
+        save_shift(new_shifts)
         
         st.write("登録しました")
     def float_to_time(value):
