@@ -207,9 +207,6 @@ with tab1:
                 color = WORKPLACES[workplace]["color"]
                 st.markdown(f"<span style='color:{color}'>"f"勤務地:{workplace}"f"</span>",unsafe_allow_html=True)
                 st.write(f"必要なシフト: {required_hours:.1f}時間")
-                color = WORKPLACES[workplace]["color"]
-                st.markdown(f"<span style='color:{color}'>"f"勤務地:{workplace}"f"</span>",unsafe_allow_html=True)
-                st.write(f"必要なシフト: {required_hours:.1f}時間")
     else:
         st.write(f"必要なシフト: ないです")
 
