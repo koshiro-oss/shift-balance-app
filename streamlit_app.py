@@ -23,13 +23,19 @@ def save_data(current_balance,shifts, expenses):
 def save_shift(shift):
 
     (supabase.table("shifts").insert(shift).execute())
-
 def load_shifts():
 
     result = (supabase.table("shifts").select("*").execute())
 
     return result.data
+def save_expense(expense):
 
+    (supabase.table("expenses").insert(expense).execute())
+def load_expenses():
+
+    result = (supabase.table("expenses").select("*").execute())
+
+    return result.data
 def save_master(workplaces, expense_colors):
 
     master = {"workplaces": workplaces,"expense_colors": expense_colors}
@@ -248,11 +254,8 @@ with tab2:
     #ボタン押されたら実行
     if register1:
         new_shifts = {"id": str(uuid.uuid4()),"workplace": workplace, "work_date": str(work_date), "pay_date": str(pay_date), "start_time": start_time, "end_time": end_time, "break_minutes": break_minutes, "hourly_wage": hourly_wage, "salary":salary}
-    
-        data = load_data()
 
         shifts = load_shifts()
-        expenses = data["expenses"]
         save_shift(new_shifts)
         
         st.write("登録しました")
@@ -317,12 +320,8 @@ with tab3:
     if register2:
         new_expenses = {"id": str(uuid.uuid4()),"purpose": purpose,"memo": memo,"due_date": str(due_date),"amount": int(amount)}
 
-        data = load_data()
-        shifts = data["shifts"]
-        expenses = data["expenses"]
-        expenses.append(new_expenses)
-        
-        save_data(current_balance, shifts, expenses)
+        expenses = load_expenses()
+        save_expense(new_expenses)
 
         st.write("登録しました")
 
