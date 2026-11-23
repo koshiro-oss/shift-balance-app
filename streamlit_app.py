@@ -227,8 +227,8 @@ with tab2:
     start_hour = st.selectbox("開始時間",list(range(24)))
     start_minute = st.selectbox("開始分",[0,15,30,45])
     end_hour = st.selectbox("終了時間",list(range(24)))
-    end_minute = st.selectbox("終了分",[0,15,30,45,60])
-    break_minutes = st.selectbox("休憩時間",[0,15,30,45])
+    end_minute = st.selectbox("終了分",[0,15,30,45])
+    break_minutes = st.selectbox("休憩時間",[0,15,30,45,60])
     hourly_wage = WORKPLACES[workplace]["hourly_wage"]
 
     #給与計算/登録
