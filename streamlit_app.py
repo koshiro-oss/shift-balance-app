@@ -95,9 +95,8 @@ EXPENSES_COLORS = master["expense_colors"]
 with tab1:
 
     #登録済みデータ取得
-    data = load_data()
-    shifts = data["shifts"]
-    expenses = data["expenses"]
+    shifts = load_shifts()
+    expenses = load_expenses()
     current_balance = load_balance()
     #収支計算
     st.subheader("収支計算")
@@ -570,7 +569,7 @@ def show_event_detail(event_type, record):
             st.subheader("支出詳細")
 
             st.write("項目:", record["purpose"])
-            st.write("メモ:",record['memo'])
+            st.write("メモ:", record.get("memo", ""))
             st.write("使用日:", record["due_date"])
             st.write("金額:", record["amount"])
 
