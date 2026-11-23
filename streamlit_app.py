@@ -314,13 +314,11 @@ with tab2:
                          if s["id"] != shift_id]
                 delete_shift(shift_id)
                 st.rerun()    
-
-
     
 #出費入力専用画面
 with tab3:
     st.subheader("登録済み支出")
-    st.metric("支出予定",f"{monthly_expense}円")
+    st.metric("対象月の支出予定総額",f"{monthly_expense}円")
     
     sorted_expenses = sorted(expenses,key=lambda x: x["due_date"],reverse=True)
     current_date = None
