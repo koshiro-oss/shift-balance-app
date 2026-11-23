@@ -202,10 +202,14 @@ with tab1:
     if balance<0:
         for workplace in list(WORKPLACES.keys()):
             hourly_wage = WORKPLACES[workplace]["hourly_wage"]  
-            required_hours = abs(balance)/hourly_wage
-            color = WORKPLACES[workplace]["color"]
-            st.markdown(f"<span style='color:{color}'>"f"勤務地:{workplace}"f"</span>",unsafe_allow_html=True)
-            st.write(f"必要なシフト: {required_hours:.1f}時間")
+            if hourly_wage > 0:
+                required_hours = abs(balance) / hourly_wage
+                color = WORKPLACES[workplace]["color"]
+                st.markdown(f"<span style='color:{color}'>"f"勤務地:{workplace}"f"</span>",unsafe_allow_html=True)
+                st.write(f"必要なシフト: {required_hours:.1f}時間")
+                color = WORKPLACES[workplace]["color"]
+                st.markdown(f"<span style='color:{color}'>"f"勤務地:{workplace}"f"</span>",unsafe_allow_html=True)
+                st.write(f"必要なシフト: {required_hours:.1f}時間")
     else:
         st.write(f"必要なシフト: ないです")
 
