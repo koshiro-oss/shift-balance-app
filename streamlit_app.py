@@ -9,6 +9,7 @@ from supabase import create_client
 
 SUPABASE_URL = st.secrets["SUPABASE_URL"]
 SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
+supabase = create_client(SUPABASE_URL,SUPABASE_KEY)
 
 st.title("収支管理アプリ")
 
@@ -26,10 +27,12 @@ def save_master(workplaces, expense_colors):
     with open("master.json", "w", encoding="utf-8") as file:
         json.dump(master,file,ensure_ascii=False,indent=4)
 
-def load_data():
+def save_balance(current_balance):
 
+    (supabase.table("app_settings").update({"current_balance": current_balance}).eq("id", 1).execute())
+
+def load_data():
     if not os.path.exists("data.json"):
-        
         return {"current_balance": 0,"shifts": [],"expenses": []}
 
     with open("data.json", "r", encoding="utf-8") as file:
@@ -61,6 +64,11 @@ def load_master():
 
     return master
 
+def load_balance():
+
+    result = (supabase.table("app_settings").select("current_balance").eq("id", 1).execute())
+    return result.data[0]["current_balance"]
+
 tab1, tab2, tab3, tab4 = st.tabs(["ホーム","シフト","支出","設定"])
 
 master = load_master()
@@ -75,7 +83,7 @@ with tab1:
     data = load_data()
     shifts = data["shifts"]
     expenses = data["expenses"]
-    current_balance = data["current_balance"]
+    current_balance = load_balance()
     #収支計算
     st.subheader("収支計算")
     months = []
@@ -165,7 +173,7 @@ with tab1:
 
     current_balance = st.number_input("現在残高",value=current_balance)
     if st.button("残高更新"):
-        save_data(current_balance,shifts,expenses)
+        save_balance(current_balance)
         st.success("保存しました")
 
 #シフト入力専用画面
