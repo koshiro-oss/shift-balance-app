@@ -646,7 +646,6 @@ calendar_state = st_calendar(
  #calendar_state：クリックされたイベントの情報を受け取る
 
 ###-----イベントの判定はカレンダー側、表示内容の決定は関数側-----###
-st.write(calendar_state)
 # イベントクリック時の処理
 if calendar_state and calendar_state.get("callback") == "eventClick":
 
