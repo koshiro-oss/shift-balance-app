@@ -28,6 +28,9 @@ def load_shifts():
     result = (supabase.table("shifts").select("*").execute())
 
     return result.data
+def delete_shift(record_id):
+
+    (supabase.table("shifts").delete().eq("id", record_id).execute())
 def save_expense(expense):
 
     (supabase.table("expenses").insert(expense).execute())
@@ -36,6 +39,9 @@ def load_expenses():
     result = (supabase.table("expenses").select("*").execute())
 
     return result.data
+def delete_expense(record_id):
+
+    (supabase.table("expenses").delete().eq("id", record_id).execute())
 def save_master(workplaces, expense_colors):
 
     master = {"workplaces": workplaces,"expense_colors": expense_colors}
@@ -197,7 +203,6 @@ with tab2:
     st.metric("収入予定",f"{monthly_income}円")
     for wp in list(WORKPLACES.keys()):
         st.write(f"{wp}の収入:"f"{workplace_incomes[wp]}円")
-    st.write(load_shifts())
 #シフト入力
     workplace = st.selectbox("勤務先",list(WORKPLACES.keys()))
     work_date = st.date_input("勤務日")
@@ -288,7 +293,7 @@ with tab2:
             if st.button("削除",key=f"delete_{shift_id}"):
                 shifts[:] = [s for s in shifts
                          if s["id"] != shift_id]
-                save_data(current_balance,shifts,expenses)
+                delete_shift(shift_id)
                 st.rerun()    
 
 
@@ -344,7 +349,7 @@ with tab3:
             if st.button("削除",key=f"expense_delete_{expense_id}"):
                 expenses[:] = [e for e in expenses
                                if e["id"] != expense_id]
-                save_data(current_balance,shifts,expenses)
+                delete_expense(expense_id)
                 st.rerun()
 
 
@@ -451,16 +456,10 @@ calendar_events.sort(key=lambda calendar_event: calendar_event["start"])
 def delete_data(event_type, record_id):
 
     if event_type == "shift" or event_type == "pay":
-
-        shifts[:] = [shift for shift in shifts
-                     if shift["id"] != record_id]
+        delete_shift(record_id)
 
     elif event_type == "expense":
-
-        expenses[:] = [expense for expense in expenses
-                       if expense["id"] != record_id]
-
-    save_data(current_balance, shifts, expenses)
+        delete_expense(record_id)
 
 # イベント詳細表示用のポップアップ
 @st.dialog("イベント詳細")
