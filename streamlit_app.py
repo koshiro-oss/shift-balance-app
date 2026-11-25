@@ -287,7 +287,9 @@ with tab2:
         minute = round((value - hour) * 60)
         return datetime.strptime(f"{hour:02d}:{minute:02d}","%H:%M").time()
 
-    sorted_shifts = sorted(shifts,key=lambda x: x["work_date"],reverse=True)
+    sorted_shifts = sorted([s for s in shifts
+                           if s["work_date"][:7] == target_month],
+                           key=lambda x: x["work_date"],reverse=True)
     current_date = None
     
     for shift in sorted_shifts:
@@ -320,7 +322,9 @@ with tab3:
     st.subheader("登録済み支出")
     st.metric("対象月の支出予定総額",f"{monthly_expense}円")
     
-    sorted_expenses = sorted(expenses,key=lambda x: x["due_date"],reverse=True)
+    sorted_expenses = sorted([e for e in expenses
+                           if e["due_date"][:7] == target_month],
+                           key=lambda x: x["due_date"],reverse=True)
     current_date = None
     
     #出費入力
@@ -677,14 +681,22 @@ if calendar_state and calendar_state.get("callback") == "eventClick":
 
     # 給与日がクリックされた場合
     elif clicked_id.startswith("salary_"):
+        parts = clicked_id.split("_", 2)
 
-        shift_id = clicked_id[len("salary_"):]
+        workplace = parts[1]
+        pay_date = parts[2]
 
-        shift = next((s for s in shifts if s["id"] == shift_id),None)
+        total_salary = sum(shift["salary"]
+                           for shift in shifts
+                           if shift["workplace"] == workplace
+                           and shift["pay_date"] == pay_date)
 
-        if shift is not None:
-            #show_event_detail("pay", shift)
-            st.info("給与合計イベントです")
+        @st.dialog("給与詳細")
+        def show_salary():
+            st.subheader(f"{workplace}給与")
+            st.write("振込日:", pay_date)
+            st.write("合計給与:", f"{total_salary}円")
+        show_salary()
 
 
     # 支出がクリックされた場合
