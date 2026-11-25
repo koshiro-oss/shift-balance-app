@@ -183,91 +183,6 @@ with tab1:
         balance = monthly_income - monthly_expense
         return balance
 
-    monthly_income = calculate_monthly_income(shifts,target_month)[0]
-    workplace_incomes = calculate_monthly_income(shifts,target_month)[1]
-    monthly_expense = calculate_monthly_expense(expenses,target_month)
-    balance = calculate_balance(monthly_income, monthly_expense, target_month)
-
-    future_balance = current_balance + balance
-    balance_color = (
-    "#dcfce7"
-    if future_balance >= 0
-    else "#fee2e2")
-
-    st.markdown(
-    f"""
-    <div style="
-        background-color:{balance_color};
-        padding:25px;
-        border-radius:15px;
-        text-align:center;
-        margin-bottom:20px;
-    ">
-        <h3>予想残高</h3>
-        <h1>{future_balance:,}円</h1>
-    </div>
-    """,
-    unsafe_allow_html=True)
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.markdown(
-        f"""
-        <div style="
-        background-color:#dbeafe;
-        padding:15px;
-        border-radius:10px;
-        text-align:center;
-        ">
-        <h4>収入</h4>
-        <h3>{monthly_income:,}円</h3>
-        </div>
-        """,
-        unsafe_allow_html=True)
-
-    with col2:
-        st.markdown(
-        f"""
-        <div style="
-        background-color:#fee2e2;
-        padding:15px;
-        border-radius:10px;
-        text-align:center;
-        ">
-        <h4>支出</h4>
-        <h3>{monthly_expense:,}円</h3>
-        </div>
-        """,
-        unsafe_allow_html=True)
-
-    with col3:
-        st.markdown(
-        f"""
-        <div style="
-        background-color:#dcfce7;
-        padding:15px;
-        border-radius:10px;
-        text-align:center;
-        ">
-        <h4>収支</h4>
-        <h3>{balance:,}円</h3>
-        </div>""",unsafe_allow_html=True)
-
-    st.subheader("労働時間不足")
-    if balance<0:
-        for workplace in list(WORKPLACES.keys()):
-            hourly_wage = WORKPLACES[workplace]["hourly_wage"]  
-            if hourly_wage > 0:
-                required_hours = abs(balance) / hourly_wage
-                color = WORKPLACES[workplace]["color"]
-                st.markdown(f"<span style='color:{color}'>"f"勤務地:{workplace}"f"</span>",unsafe_allow_html=True)
-                st.write(f"必要なシフト: {required_hours:.1f}時間")
-    else:
-        st.write(f"必要なシフト: ないです")
-
-    current_balance = st.number_input("現在残高",value=current_balance)
-    if st.button("残高更新"):
-        save_balance(current_balance)
-        st.success("保存しました")
 
 #シフト入力専用画面
 with tab2:
@@ -762,6 +677,93 @@ if calendar_state and calendar_state.get("callback") == "eventClick":
 
         if expense is not None:
             show_event_detail("expense", expense)
+
+    monthly_income = calculate_monthly_income(shifts,target_month)[0]
+    workplace_incomes = calculate_monthly_income(shifts,target_month)[1]
+    monthly_expense = calculate_monthly_expense(expenses,target_month)
+    balance = calculate_balance(monthly_income, monthly_expense, target_month)
+
+    future_balance = current_balance + balance
+    balance_color = (
+    "#dcfce7"
+    if future_balance >= 0
+    else "#fee2e2")
+
+    st.markdown(
+    f"""
+    <div style="
+        background-color:{balance_color};
+        padding:25px;
+        border-radius:15px;
+        text-align:center;
+        margin-bottom:20px;
+    ">
+        <h3>予想残高</h3>
+        <h1>{future_balance:,}円</h1>
+    </div>
+    """,
+    unsafe_allow_html=True)
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.markdown(
+        f"""
+        <div style="
+        background-color:#dbeafe;
+        padding:15px;
+        border-radius:10px;
+        text-align:center;
+        ">
+        <h4>収入</h4>
+        <h3>{monthly_income:,}円</h3>
+        </div>
+        """,
+        unsafe_allow_html=True)
+
+    with col2:
+        st.markdown(
+        f"""
+        <div style="
+        background-color:#fee2e2;
+        padding:15px;
+        border-radius:10px;
+        text-align:center;
+        ">
+        <h4>支出</h4>
+        <h3>{monthly_expense:,}円</h3>
+        </div>
+        """,
+        unsafe_allow_html=True)
+
+    with col3:
+        st.markdown(
+        f"""
+        <div style="
+        background-color:#dcfce7;
+        padding:15px;
+        border-radius:10px;
+        text-align:center;
+        ">
+        <h4>収支</h4>
+        <h3>{balance:,}円</h3>
+        </div>""",unsafe_allow_html=True)
+
+    st.subheader("労働時間不足")
+    if balance<0:
+        for workplace in list(WORKPLACES.keys()):
+            hourly_wage = WORKPLACES[workplace]["hourly_wage"]  
+            if hourly_wage > 0:
+                required_hours = abs(balance) / hourly_wage
+                color = WORKPLACES[workplace]["color"]
+                st.markdown(f"<span style='color:{color}'>"f"勤務地:{workplace}"f"</span>",unsafe_allow_html=True)
+                st.write(f"必要なシフト: {required_hours:.1f}時間")
+    else:
+        st.write(f"必要なシフト: ないです")
+
+    current_balance = st.number_input("現在残高",value=current_balance)
+    if st.button("残高更新"):
+        save_balance(current_balance)
+        st.success("保存しました")
+
 
 st.subheader("カラーパレット一覧")
 # 勤務先カラー
