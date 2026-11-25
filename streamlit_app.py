@@ -763,13 +763,14 @@ if calendar_state and calendar_state.get("callback") == "eventClick":
         if expense is not None:
             show_event_detail("expense", expense)
 
-st.subheader("カラーパレット一覧")
-# 勤務先カラー
-for workplace, info in WORKPLACES.items():
-    st.markdown(f"<span style='color:{info['color']}; "f"font-weight:bold; "f"font-size:18px;'>■</span> "f"{workplace}",unsafe_allow_html=True)
-# 支出カラー
-for purpose, color in EXPENSES_COLORS.items():
-    st.markdown(f"<span style='color:{color}; "f"font-weight:bold; "f"font-size:18px;'>■</span> "f"{purpose}",unsafe_allow_html=True)
-# 給料日カラー
-st.markdown("<span style='color:gold; ""font-weight:bold; ""font-size:18px;'>■</span> ""給料日",unsafe_allow_html=True)
+with st.expander("カラーパレット"):
+    st.subheader("カラーパレット一覧")
+    # 勤務先カラー
+    for workplace, info in WORKPLACES.items():
+        st.markdown(f"<span style='color:{info['color']}; "f"font-weight:bold; "f"font-size:18px;'>■</span> "f"{workplace}",unsafe_allow_html=True)
+    # 支出カラー
+    for purpose, color in EXPENSES_COLORS.items():
+        st.markdown(f"<span style='color:{color}; "f"font-weight:bold; "f"font-size:18px;'>■</span> "f"{purpose}",unsafe_allow_html=True)
+    # 給料日カラー
+    st.markdown("<span style='color:gold; ""font-weight:bold; ""font-size:18px;'>■</span> ""給料日",unsafe_allow_html=True)
 
