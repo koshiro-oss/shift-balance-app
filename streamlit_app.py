@@ -446,6 +446,7 @@ with tab4:
 calendar_events = []
 
 # シフト・給与イベント
+
 for shift in shifts:
     color = WORKPLACES[shift["workplace"]]["color"]
     shift_id = shift["id"]
@@ -454,8 +455,17 @@ for shift in shifts:
     calendar_events.append({"id": f"shift_{shift_id}","title": shift["workplace"],"start": shift["work_date"],"color": color})
 
     # 給与イベント
-    calendar_events.append({"id": f"pay_{shift_id}","title": shift["workplace"] + "給与","start": shift["pay_date"],"color": "gold"})
-
+pay_events = {}
+for shift in shifts:
+        key = (shift["workplace"],shift["pay_date"])
+        if key not in pay_events:
+            pay_events[key] = 0
+        pay_events[key] += shift["salary"]
+        for (workplace, pay_date), total_salary in pay_events.items():
+            calendar_events.append({"id": f"salary_{workplace}_{pay_date}",
+                            "title": f"{workplace}給与 {total_salary}円",
+                            "start": pay_date,
+                            "color": "gold"})
 # 支出イベント
 for expense in expenses:
     color = EXPENSES_COLORS[expense["purpose"]]
@@ -666,14 +676,15 @@ if calendar_state and calendar_state.get("callback") == "eventClick":
 
 
     # 給与日がクリックされた場合
-    elif clicked_id.startswith("pay_"):
+    elif clicked_id.startswith("salary_"):
 
-        shift_id = clicked_id[len("pay_"):]
+        shift_id = clicked_id[len("salary_"):]
 
         shift = next((s for s in shifts if s["id"] == shift_id),None)
 
         if shift is not None:
-            show_event_detail("pay", shift)
+            #show_event_detail("pay", shift)
+            st.info("給与合計イベントです")
 
 
     # 支出がクリックされた場合
