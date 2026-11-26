@@ -138,8 +138,272 @@ with tab1:
             current_month -= 12
             current_year += 1
         months.append(f"{current_year}-{current_month:02d}")
-    target_month = st.selectbox("対象月",months)
+target_month = st.selectbox("対象月",months)
 
+### カレンダー ###
+calendar_events = []
+
+# シフト・給与イベント
+
+for shift in shifts:
+    color = WORKPLACES[shift["workplace"]]["color"]
+    shift_id = shift["id"]
+
+    # シフトイベント
+    calendar_events.append({"id": f"shift_{shift_id}","title": shift["workplace"],"start": shift["work_date"],"color": color})
+
+    # 給与イベント
+pay_events = {}
+for shift in shifts:
+        key = (shift["workplace"],shift["pay_date"])
+        if key not in pay_events:
+            pay_events[key] = 0
+        pay_events[key] += shift["salary"]
+        for (workplace, pay_date), total_salary in pay_events.items():
+            calendar_events.append({"id": f"salary_{workplace}_{pay_date}",
+                            "title": f"{workplace}給与 {total_salary}円",
+                            "start": pay_date,
+                            "color": "gold"})
+# 支出イベント
+for expense in expenses:
+    color = EXPENSES_COLORS[expense["purpose"]]
+
+    expense_id = expense["id"]
+
+    calendar_events.append({"id": f"expense_{expense_id}","title": expense["purpose"],"start": expense["due_date"],"color": color})
+
+calendar_events.sort(key=lambda calendar_event: calendar_event["start"])
+
+ # -------------------
+ # 削除処理
+ # -------------------
+# データ削除用の関数
+def delete_data(event_type, record_id):
+
+    if event_type == "shift" or event_type == "pay":
+        delete_shift(record_id)
+
+    elif event_type == "expense":
+        delete_expense(record_id)
+
+# イベント詳細表示用のポップアップ
+@st.dialog("イベント詳細")
+def show_event_detail(event_type, record):
+
+    record_id = record["id"]
+    edit_key = f"editing_{event_type}_{record_id}"
+
+    # 編集ボタン
+    if st.button("編集", key=f"edit_button_{event_type}_{record_id}"):
+        st.session_state[edit_key] = True
+
+    # 編集モード
+    if st.session_state.get(edit_key, False):
+        st.subheader("編集フォーム")
+
+        # -------------------
+        # シフト編集
+        # -------------------
+        if event_type == "shift":
+
+            with st.form("shift_edit_form"):
+
+                workplace = st.selectbox("勤務先",list(WORKPLACES.keys()),index=list(WORKPLACES.keys()).index(record["workplace"]))
+                work_date = st.date_input("勤務日",value=datetime.strptime(record["work_date"], "%Y-%m-%d").date())
+                start_time = st.time_input("開始時間",value=float_to_time(record["start_time"]))
+                end_time = st.time_input("終了時間",value=float_to_time(record["end_time"]))
+                break_minutes = st.selectbox("休憩時間",[0, 15, 30, 45],index=[0, 15, 30, 45].index(record["break_minutes"]))
+                submitted = st.form_submit_button("変更を保存")
+
+                if submitted:
+
+                    start_hour = start_time.hour + start_time.minute / 60
+                    end_hour = end_time.hour + end_time.minute / 60
+                    work_hours = end_hour - start_hour - break_minutes / 60
+
+                    if work_hours <= 0:
+
+                        st.error("勤務時間が不正です")
+
+                    else:
+                        hourly_wage = WORKPLACES[workplace]["hourly_wage"]
+                        salary = int(work_hours * hourly_wage)
+                        pay_date = calculate_pay_date(work_date, workplace)
+
+                        # 元データを書き換える
+                        record.update({"workplace": workplace,"work_date": str(work_date),"start_time": start_hour,"end_time": end_hour,"break_minutes": break_minutes,
+                                       "hourly_wage": hourly_wage,"salary": salary,"pay_date": str(pay_date)})
+
+                        update_shift(record)
+
+                        st.session_state[edit_key] = False
+                        st.success("変更を保存しました！")
+                        st.rerun()
+        # -------------------
+        # 支出編集
+        # -------------------
+        elif event_type == "expense":
+
+            with st.form("expense_edit_form"):
+
+                purpose = st.selectbox("項目",list(EXPENSES_COLORS.keys()),index=list(EXPENSES_COLORS.keys()).index(record["purpose"]))
+                memo = st.text_input("メモ",value=record.get("memo", ""))
+                due_date = st.date_input("使用日",value=datetime.strptime(record["due_date"], "%Y-%m-%d").date())
+                amount = st.number_input("料金",min_value=0,value=int(record["amount"]),step=100)
+                submitted = st.form_submit_button("変更を保存")
+
+                if submitted:
+
+                    record.update({"purpose": purpose,"memo": memo,"due_date": str(due_date),"amount": int(amount)})
+
+                    update_expense(record)
+
+                    st.session_state[edit_key] = False
+                    st.success("変更を保存しました！")
+                    st.rerun()
+
+    # -------------------
+    # 詳細表示モード
+    # -------------------
+    else:
+
+        if event_type == "shift":
+
+            st.subheader("シフト詳細")
+
+            st.write("勤務先:", record["workplace"])
+            st.write("勤務日:", record["work_date"])
+            st.write("開始時間:", record["start_time"])
+            st.write("終了時間:", record["end_time"])
+            st.write("休憩時間:", record["break_minutes"])
+            st.write("時給:", record["hourly_wage"])
+            st.write("給与:", record["salary"])
+            st.write("振込日:", record["pay_date"])
+
+        elif event_type == "pay":
+
+            st.subheader("給与振込詳細")
+
+            st.write("勤務先:", record["workplace"])
+            st.write("勤務日:", record["work_date"])
+            st.write("振込予定額:", record["salary"])
+
+        elif event_type == "expense":
+
+            st.subheader("支出詳細")
+
+            st.write("項目:", record["purpose"])
+            st.write("メモ:", record.get("memo", ""))
+            st.write("使用日:", record["due_date"])
+            st.write("金額:", record["amount"])
+
+        # 削除機能
+    st.write("---")
+    
+    record_id = record["id"]
+    delete_key = f"delete_confirm_{event_type}_{record_id}"    
+
+    if not st.session_state.get(delete_key, False):
+
+        if st.button("削除", key=f"delete_button_{event_type}_{record_id}"):
+
+            st.session_state[delete_key] = True
+            st.rerun()
+
+    else:
+
+        st.warning("本当に削除しますか？")
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+
+            if st.button("削除を確定", key=f"confirm_{event_type}_{record_id}"):
+
+                delete_data(event_type, record_id)
+
+                st.session_state[delete_key] = False
+
+                st.success("削除しました！")
+
+                st.rerun()
+
+        with col2:
+
+            if st.button("キャンセル", key=f"cancel_{event_type}_{record_id}"):
+
+                st.session_state[delete_key] = False
+
+                st.rerun()
+
+
+#calendar_state = st_calendar(events = calendar_events ,options={"firstDay": 1},callbacks=["eventClick","dateClick","viewDidMount"],key="calendar")
+calendar_state = st_calendar(
+    events=calendar_events,
+    options={
+        "firstDay": 1,
+        "initialDate": f"{target_month}-01"
+    },
+    callbacks=["eventClick"],
+    key=f"calendar_{target_month}"
+
+)
+#0：日曜,1：月曜
+ #callbacks=["eventClick"]：イベントをクリックしたときの情報を取得する。
+ #calendar_state：クリックされたイベントの情報を受け取る
+
+###-----イベントの判定はカレンダー側、表示内容の決定は関数側-----###
+# イベントクリック時の処理
+if calendar_state and calendar_state.get("callback") == "eventClick":
+
+    clicked_event = calendar_state["eventClick"]["event"]
+    clicked_id = clicked_event["id"]
+    if st.session_state.get("last_clicked_id") == clicked_id:
+        st.stop()
+    st.session_state["last_clicked_id"] = clicked_id
+
+    # シフトがクリックされた場合
+    if clicked_id.startswith("shift_"):
+
+        shift_id = clicked_id[len("shift_"):]
+
+        shift = next((s for s in shifts if s["id"] == shift_id),None)
+
+        if shift is not None:
+            show_event_detail("shift", shift)
+
+
+    # 給与日がクリックされた場合
+    elif clicked_id.startswith("salary_"):
+        parts = clicked_id.split("_", 2)
+
+        workplace = parts[1]
+        pay_date = parts[2]
+
+        total_salary = sum(shift["salary"]
+                           for shift in shifts
+                           if shift["workplace"] == workplace
+                           and shift["pay_date"] == pay_date)
+
+        @st.dialog("給与詳細")
+        def show_salary():
+            st.subheader(f"{workplace}給与")
+            st.write("振込日:", pay_date)
+            st.write("合計給与:", f"{total_salary}円")
+        show_salary()
+
+
+    # 支出がクリックされた場合
+    elif clicked_id.startswith("expense_"):
+
+        expense_id = clicked_id[len("expense_"):]
+
+        expense = next((e for e in expenses if e["id"] == expense_id),None)
+
+        if expense is not None:
+            show_event_detail("expense", expense)
+
+with tab1:
     #当月の月収の計算
     def calculate_monthly_income(shifts, target_month):
         monthly_income = 0  # 全体の総支給額
@@ -497,271 +761,6 @@ with tab4:
         EXPENSES_COLORS[purpose] = expense_color
         save_master(WORKPLACES,EXPENSES_COLORS)
         st.success("追加しました")
-
-
-
-### カレンダー ###
-calendar_events = []
-
-# シフト・給与イベント
-
-for shift in shifts:
-    color = WORKPLACES[shift["workplace"]]["color"]
-    shift_id = shift["id"]
-
-    # シフトイベント
-    calendar_events.append({"id": f"shift_{shift_id}","title": shift["workplace"],"start": shift["work_date"],"color": color})
-
-    # 給与イベント
-pay_events = {}
-for shift in shifts:
-        key = (shift["workplace"],shift["pay_date"])
-        if key not in pay_events:
-            pay_events[key] = 0
-        pay_events[key] += shift["salary"]
-        for (workplace, pay_date), total_salary in pay_events.items():
-            calendar_events.append({"id": f"salary_{workplace}_{pay_date}",
-                            "title": f"{workplace}給与 {total_salary}円",
-                            "start": pay_date,
-                            "color": "gold"})
-# 支出イベント
-for expense in expenses:
-    color = EXPENSES_COLORS[expense["purpose"]]
-
-    expense_id = expense["id"]
-
-    calendar_events.append({"id": f"expense_{expense_id}","title": expense["purpose"],"start": expense["due_date"],"color": color})
-
-calendar_events.sort(key=lambda calendar_event: calendar_event["start"])
-
- # -------------------
- # 削除処理
- # -------------------
-# データ削除用の関数
-def delete_data(event_type, record_id):
-
-    if event_type == "shift" or event_type == "pay":
-        delete_shift(record_id)
-
-    elif event_type == "expense":
-        delete_expense(record_id)
-
-# イベント詳細表示用のポップアップ
-@st.dialog("イベント詳細")
-def show_event_detail(event_type, record):
-
-    record_id = record["id"]
-    edit_key = f"editing_{event_type}_{record_id}"
-
-    # 編集ボタン
-    if st.button("編集", key=f"edit_button_{event_type}_{record_id}"):
-        st.session_state[edit_key] = True
-
-    # 編集モード
-    if st.session_state.get(edit_key, False):
-        st.subheader("編集フォーム")
-
-        # -------------------
-        # シフト編集
-        # -------------------
-        if event_type == "shift":
-
-            with st.form("shift_edit_form"):
-
-                workplace = st.selectbox("勤務先",list(WORKPLACES.keys()),index=list(WORKPLACES.keys()).index(record["workplace"]))
-                work_date = st.date_input("勤務日",value=datetime.strptime(record["work_date"], "%Y-%m-%d").date())
-                start_time = st.time_input("開始時間",value=float_to_time(record["start_time"]))
-                end_time = st.time_input("終了時間",value=float_to_time(record["end_time"]))
-                break_minutes = st.selectbox("休憩時間",[0, 15, 30, 45],index=[0, 15, 30, 45].index(record["break_minutes"]))
-                submitted = st.form_submit_button("変更を保存")
-
-                if submitted:
-
-                    start_hour = start_time.hour + start_time.minute / 60
-                    end_hour = end_time.hour + end_time.minute / 60
-                    work_hours = end_hour - start_hour - break_minutes / 60
-
-                    if work_hours <= 0:
-
-                        st.error("勤務時間が不正です")
-
-                    else:
-                        hourly_wage = WORKPLACES[workplace]["hourly_wage"]
-                        salary = int(work_hours * hourly_wage)
-                        pay_date = calculate_pay_date(work_date, workplace)
-
-                        # 元データを書き換える
-                        record.update({"workplace": workplace,"work_date": str(work_date),"start_time": start_hour,"end_time": end_hour,"break_minutes": break_minutes,
-                                       "hourly_wage": hourly_wage,"salary": salary,"pay_date": str(pay_date)})
-
-                        update_shift(record)
-
-                        st.session_state[edit_key] = False
-                        st.success("変更を保存しました！")
-                        st.rerun()
-        # -------------------
-        # 支出編集
-        # -------------------
-        elif event_type == "expense":
-
-            with st.form("expense_edit_form"):
-
-                purpose = st.selectbox("項目",list(EXPENSES_COLORS.keys()),index=list(EXPENSES_COLORS.keys()).index(record["purpose"]))
-                memo = st.text_input("メモ",value=record.get("memo", ""))
-                due_date = st.date_input("使用日",value=datetime.strptime(record["due_date"], "%Y-%m-%d").date())
-                amount = st.number_input("料金",min_value=0,value=int(record["amount"]),step=100)
-                submitted = st.form_submit_button("変更を保存")
-
-                if submitted:
-
-                    record.update({"purpose": purpose,"memo": memo,"due_date": str(due_date),"amount": int(amount)})
-
-                    update_expense(record)
-
-                    st.session_state[edit_key] = False
-                    st.success("変更を保存しました！")
-                    st.rerun()
-
-    # -------------------
-    # 詳細表示モード
-    # -------------------
-    else:
-
-        if event_type == "shift":
-
-            st.subheader("シフト詳細")
-
-            st.write("勤務先:", record["workplace"])
-            st.write("勤務日:", record["work_date"])
-            st.write("開始時間:", record["start_time"])
-            st.write("終了時間:", record["end_time"])
-            st.write("休憩時間:", record["break_minutes"])
-            st.write("時給:", record["hourly_wage"])
-            st.write("給与:", record["salary"])
-            st.write("振込日:", record["pay_date"])
-
-        elif event_type == "pay":
-
-            st.subheader("給与振込詳細")
-
-            st.write("勤務先:", record["workplace"])
-            st.write("勤務日:", record["work_date"])
-            st.write("振込予定額:", record["salary"])
-
-        elif event_type == "expense":
-
-            st.subheader("支出詳細")
-
-            st.write("項目:", record["purpose"])
-            st.write("メモ:", record.get("memo", ""))
-            st.write("使用日:", record["due_date"])
-            st.write("金額:", record["amount"])
-
-        # 削除機能
-    st.write("---")
-    
-    record_id = record["id"]
-    delete_key = f"delete_confirm_{event_type}_{record_id}"    
-
-    if not st.session_state.get(delete_key, False):
-
-        if st.button("削除", key=f"delete_button_{event_type}_{record_id}"):
-
-            st.session_state[delete_key] = True
-            st.rerun()
-
-    else:
-
-        st.warning("本当に削除しますか？")
-
-        col1, col2 = st.columns(2)
-
-        with col1:
-
-            if st.button("削除を確定", key=f"confirm_{event_type}_{record_id}"):
-
-                delete_data(event_type, record_id)
-
-                st.session_state[delete_key] = False
-
-                st.success("削除しました！")
-
-                st.rerun()
-
-        with col2:
-
-            if st.button("キャンセル", key=f"cancel_{event_type}_{record_id}"):
-
-                st.session_state[delete_key] = False
-
-                st.rerun()
-
-
-#calendar_state = st_calendar(events = calendar_events ,options={"firstDay": 1},callbacks=["eventClick","dateClick","viewDidMount"],key="calendar")
-calendar_state = st_calendar(
-    events=calendar_events,
-    options={
-        "firstDay": 1,
-        "initialDate": f"{target_month}-01"
-    },
-    callbacks=["eventClick"],
-    key=f"calendar_{target_month}"
-
-)
-#0：日曜,1：月曜
- #callbacks=["eventClick"]：イベントをクリックしたときの情報を取得する。
- #calendar_state：クリックされたイベントの情報を受け取る
-
-###-----イベントの判定はカレンダー側、表示内容の決定は関数側-----###
-# イベントクリック時の処理
-if calendar_state and calendar_state.get("callback") == "eventClick":
-
-    clicked_event = calendar_state["eventClick"]["event"]
-    clicked_id = clicked_event["id"]
-    if st.session_state.get("last_clicked_id") == clicked_id:
-        st.stop()
-    st.session_state["last_clicked_id"] = clicked_id
-
-    # シフトがクリックされた場合
-    if clicked_id.startswith("shift_"):
-
-        shift_id = clicked_id[len("shift_"):]
-
-        shift = next((s for s in shifts if s["id"] == shift_id),None)
-
-        if shift is not None:
-            show_event_detail("shift", shift)
-
-
-    # 給与日がクリックされた場合
-    elif clicked_id.startswith("salary_"):
-        parts = clicked_id.split("_", 2)
-
-        workplace = parts[1]
-        pay_date = parts[2]
-
-        total_salary = sum(shift["salary"]
-                           for shift in shifts
-                           if shift["workplace"] == workplace
-                           and shift["pay_date"] == pay_date)
-
-        @st.dialog("給与詳細")
-        def show_salary():
-            st.subheader(f"{workplace}給与")
-            st.write("振込日:", pay_date)
-            st.write("合計給与:", f"{total_salary}円")
-        show_salary()
-
-
-    # 支出がクリックされた場合
-    elif clicked_id.startswith("expense_"):
-
-        expense_id = clicked_id[len("expense_"):]
-
-        expense = next((e for e in expenses if e["id"] == expense_id),None)
-
-        if expense is not None:
-            show_event_detail("expense", expense)
 
 with st.expander("カラーパレット"):
     st.subheader("カラーパレット一覧")
