@@ -403,7 +403,7 @@ if calendar_state and calendar_state.get("callback") == "eventClick":
         if expense is not None:
             show_event_detail("expense", expense)
 
-with tab1:
+
     #当月の月収の計算
     def calculate_monthly_income(shifts, target_month):
         monthly_income = 0  # 全体の総支給額
