@@ -588,7 +588,7 @@ with tab2:
         shifts = load_shifts()
         save_shift(new_shifts)
         
-        st.write("登録しました")
+        st.success("登録しました")
     
     sorted_shifts = sorted([s for s in shifts
                            if s["work_date"][:7] == target_month],
@@ -600,7 +600,7 @@ with tab2:
         if shift["work_date"] != current_date:
             current_date = shift["work_date"]
             st.divider()
-            st.markdown(f"## 📅 {current_date}")
+            st.markdown(f"### 📅 {current_date}")
         
         color = WORKPLACES[shift["workplace"]]["color"]
         work_hours = (shift["end_time"] - shift["start_time"] - shift["break_minutes"] / 60)
@@ -627,6 +627,34 @@ with tab2:
 with tab3:
     st.subheader("登録済み支出")
     st.metric("対象月の支出予定総額",f"{monthly_expense}円")
+
+    with st.expander("カラーパレット"):
+        st.subheader("カテゴリー別支出")
+        expense_totals = {}
+        for expense in expenses:
+            if expense["due_date"][:7] == target_month:
+                purpose = expense["purpose"]
+                
+                if purpose not in expense_totals:
+                    expense_totals[purpose] = 0
+
+            expense_totals[purpose] += expense["amount"]
+        for purpose, total in sorted(expense_totals.items(),key=lambda x: x[1],reverse=True):
+            if total > 0:
+                color = EXPENSES_COLORS[purpose]
+
+            st.markdown(f"""
+                <div style="
+                background-color:{color};
+                color:white;
+                padding:10px;
+                border-radius:10px;
+                margin-bottom:8px;
+                ">
+                {purpose}：{total:,}円
+                </div>
+                """,
+                unsafe_allow_html=True)
     
     sorted_expenses = sorted([e for e in expenses
                            if e["due_date"][:7] == target_month],
@@ -674,7 +702,7 @@ with tab3:
         if expense["due_date"] != current_date:
             current_date = expense["due_date"]
             st.divider()
-            st.markdown(f"## 📅 {current_date}")
+            st.markdown(f"### 📅 {current_date}")
 
         color = EXPENSES_COLORS[expense["purpose"]]
         with st.container(border=True):
@@ -693,7 +721,6 @@ with tab3:
                 if st.button("削除",key=f"expense_delete_{expense_id}"):
                     delete_expense(expense_id)
                     st.rerun()
-
 
 with tab4:
     
