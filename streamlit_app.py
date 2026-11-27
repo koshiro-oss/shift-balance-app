@@ -184,8 +184,6 @@ balance_color = ( "#dcfce7"
                  if future_balance >= 0
                  else "#fee2e2")
 
-tab1, tab2, tab3, tab4 = st.tabs(["ホーム","シフト","支出","設定"])
-
 ### カレンダー ###
 calendar_events = []
 
@@ -446,6 +444,8 @@ if calendar_state and calendar_state.get("callback") == "eventClick":
 
         if expense is not None:
             show_event_detail("expense", expense)
+
+tab1, tab2, tab3, tab4 = st.tabs(["ホーム","シフト","支出","設定"])
 
 #ホーム画面
 with tab1:
