@@ -13,13 +13,12 @@ supabase = create_client(SUPABASE_URL,SUPABASE_KEY)
 
 st.title("収支管理アプリ")
 
-#save_data, load_data定義
-def save_data(current_balance,shifts, expenses):
-        data = {"current_balance": current_balance,"shifts": shifts,"expenses": expenses}
-        with open("data.json", "w", encoding="utf-8") as file:
-            json.dump(data,file,ensure_ascii=False,indent=4)
-            
-            print("保存しました")
+###=====================
+####   Supabase
+###=====================
+###=====================
+####     Shift CRUD
+###=====================
 def save_shift(shift):
 
     (supabase.table("shifts").insert(shift).execute())
@@ -42,6 +41,10 @@ def update_shift(shift):
             "hourly_wage": shift["hourly_wage"],
             "salary": shift["salary"]
         }).eq("id", shift["id"]).execute())
+
+###======================
+####    Expensee CRUD
+###======================
 def save_expense(expense):
 
     (supabase.table("expenses").insert(expense).execute())
@@ -60,41 +63,28 @@ def update_expense(expense):
             "due_date": expense["due_date"],
             "amount": expense["amount"]
         }).eq("id", expense["id"]).execute())
+
+###======================
+####    Balance CRUD
+###======================
+def save_balance(current_balance):
+
+    (supabase.table("app_settings").update({"current_balance": current_balance}).eq("id", 1).execute())
+
+def load_balance():
+
+    result = (supabase.table("app_settings").select("current_balance").eq("id", 1).execute())
+    return result.data[0]["current_balance"]
+
+###===================
+####     Master
+###===================
 def save_master(workplaces, expense_colors):
 
     master = {"workplaces": workplaces,"expense_colors": expense_colors}
     with open("master.json", "w", encoding="utf-8") as file:
         json.dump(master,file,ensure_ascii=False,indent=4)
 
-def save_balance(current_balance):
-
-    (supabase.table("app_settings").update({"current_balance": current_balance}).eq("id", 1).execute())
-
-def load_data():
-    if not os.path.exists("data.json"):
-        return {"current_balance": 0,"shifts": [],"expenses": []}
-
-    with open("data.json", "r", encoding="utf-8") as file:
-        data = json.load(file)
-
-    updated = False
-
-    # 既存のシフトにUUIDを追加
-    for shift in data["shifts"]:
-        if not shift.get("id"):
-            shift["id"] = str(uuid.uuid4())
-            updated = True
-
-    # 既存の支出にUUIDを追加
-    for expense in data["expenses"]:
-        if not expense.get("id"):
-            expense["id"] = str(uuid.uuid4())
-            updated = True
-
-    if updated:
-        save_data(data["current_balance"],data["shifts"],data["expenses"])
-
-    return data
 
 def load_master():
 
@@ -103,19 +93,50 @@ def load_master():
 
     return master
 
-def load_balance():
-
-    result = (supabase.table("app_settings").select("current_balance").eq("id", 1).execute())
-    return result.data[0]["current_balance"]
-
-#共通データ
-shifts = load_shifts()
-expenses = load_expenses()
-current_balance = load_balance()
-
 master = load_master()
 WORKPLACES = master["workplaces"]
 EXPENSES_COLORS = master["expense_colors"]
+
+###===================
+####     Utility
+###===================
+def float_to_time(value):
+    hour = int(value)
+    minute = round((value - hour) * 60)
+    return datetime.strptime(f"{hour:02d}:{minute:02d}","%H:%M").time()
+
+def calculate_pay_date(work_date, workplace):
+        #work_date = datetime.strptime(work_date,"%Y-%m-%d")#文字列のwor_dateをカレンダ上の日付データに変更
+        #%Y: 年、%m: 月、%d: 日付
+        year = work_date.year
+        month = work_date.month
+        day = work_date.day#年、月、日付を数値データとして取り出し
+        if workplace == "ミスド":
+            if day <= 20:
+                month += 1 #monthに1たす
+            else:
+                month += 2 #monthに2たす
+            if month > 12: #monthが13とか14になったら
+                month -= 12 #12引く
+                year += 1 #年に1たす
+            return f"{year}-{month:02d}-05"
+        
+        elif workplace == "コールセンター":
+            month += 1
+            if month > 12:
+                month -= 12 #12引く
+                year += 1 #年に1たす
+            last_day = py_calendar.monthrange(year, month)[1]
+            return f"{year}-{month:02d}-{last_day}"
+
+###==================
+####   Calculation
+###==================
+
+# 共通データ
+shifts = load_shifts()
+expenses = load_expenses()
+current_balance = load_balance()
 
 months = []
 months = sorted(list(set([shift["pay_date"][:7] for shift in shifts] + [expense["due_date"][:7] for expense in expenses])))
@@ -199,12 +220,12 @@ for shift in shifts:
     # 給与イベント
 pay_events = {}
 for shift in shifts:
-        key = (shift["workplace"],shift["pay_date"])
-        if key not in pay_events:
-            pay_events[key] = 0
-        pay_events[key] += shift["salary"]
-        for (workplace, pay_date), total_salary in pay_events.items():
-            calendar_events.append({"id": f"salary_{workplace}_{pay_date}",
+    key = (shift["workplace"],shift["pay_date"])
+    if key not in pay_events:
+        pay_events[key] = 0
+    pay_events[key] += shift["salary"]
+for (workplace, pay_date), total_salary in pay_events.items():
+    calendar_events.append({"id": f"salary_{workplace}_{pay_date}",
                             "title": f"{workplace}給与 {total_salary}円",
                             "start": pay_date,
                             "color": "gold"})
@@ -224,7 +245,7 @@ calendar_events.sort(key=lambda calendar_event: calendar_event["start"])
 # データ削除用の関数
 def delete_data(event_type, record_id):
 
-    if event_type == "shift" or event_type == "pay":
+    if event_type == "shift":
         delete_shift(record_id)
 
     elif event_type == "expense":
@@ -554,31 +575,6 @@ with tab2:
         salary = 0
     salary = int(work_hours * hourly_wage)
 
-    #pay_date
-    def calculate_pay_date(work_date, workplace):
-        #work_date = datetime.strptime(work_date,"%Y-%m-%d")#文字列のwor_dateをカレンダ上の日付データに変更
-        #%Y: 年、%m: 月、%d: 日付
-        year = work_date.year
-        month = work_date.month
-        day = work_date.day#年、月、日付を数値データとして取り出し
-        if workplace == "ミスド":
-            if day <= 20:
-                month += 1 #monthに1たす
-            else:
-                month += 2 #monthに2たす
-            if month > 12: #monthが13とか14になったら
-                month -= 12 #12引く
-                year += 1 #年に1たす
-            return f"{year}-{month:02d}-05"
-        
-        elif workplace == "コールセンター":
-            month += 1
-            if month > 12:
-                month -= 12 #12引く
-                year += 1 #年に1たす
-            last_day = py_calendar.monthrange(year, month)[1]
-            return f"{year}-{month:02d}-{last_day}"
-
     pay_date = calculate_pay_date(work_date,workplace)
 
     st.write('振り込み日',f"{pay_date}")
@@ -595,11 +591,7 @@ with tab2:
         save_shift(new_shifts)
         
         st.write("登録しました")
-    def float_to_time(value):
-        hour = int(value)
-        minute = round((value - hour) * 60)
-        return datetime.strptime(f"{hour:02d}:{minute:02d}","%H:%M").time()
-
+    
     sorted_shifts = sorted([s for s in shifts
                            if s["work_date"][:7] == target_month],
                            key=lambda x: x["work_date"],reverse=True)
@@ -720,9 +712,14 @@ with tab4:
     workplace_color = st.color_picker("色",key="workplace_color")
     register_workplace = st.button("勤務先追加")
     if register_workplace:
-        WORKPLACES[workplace_name] = {"hourly_wage": hourly_wage,"closing_day": 20,"pay_day": 5,"color": workplace_color}
-        save_master(WORKPLACES,EXPENSES_COLORS)
-        st.success("追加しました")
+        if workplace_name.strip() == "":
+            st.error("勤務先名を入力してください")
+        elif hourly_wage <= 0:
+            st.error("時給を入力してください")
+        else:           
+            WORKPLACES[workplace_name] = {"hourly_wage": hourly_wage,"closing_day": 20,"pay_day": 5,"color": workplace_color}
+            save_master(WORKPLACES,EXPENSES_COLORS)
+            st.success("追加しました")
 
 
     ###----------------------
