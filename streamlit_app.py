@@ -559,16 +559,14 @@ with tab2:
 #シフト入力
     workplace = st.selectbox("勤務先",list(WORKPLACES.keys()))
     work_date = st.date_input("勤務日")
-    start_hour = st.selectbox("開始時間",list(range(24)))
-    start_minute = st.selectbox("開始分",[0,15,30,45])
-    end_hour = st.selectbox("終了時間",list(range(24)))
-    end_minute = st.selectbox("終了分",[0,15,30,45])
+    start_time_input = st.time_input("開始時間",value=datetime.strptime("09:00", "%H:%M").time())
+    end_time_input = st.time_input("終了時間",value=datetime.strptime("017:00", "%H:%M").time())
     break_minutes = st.selectbox("休憩時間",[0,15,30,45,60])
     hourly_wage = WORKPLACES[workplace]["hourly_wage"]
 
     #給与計算/登録
-    start_time = start_hour + start_minute/60
-    end_time = end_hour + end_minute/60
+    start_time = (start_time_input.hour+ start_time_input.minute / 60)
+    end_time = (end_time_input.hour+ end_time_input.minute / 60)
     work_hours = (end_time - start_time)  - (break_minutes / 60)
     if work_hours <= 0:
         st.write("エラー")
