@@ -642,19 +642,7 @@ with tab3:
         for purpose, total in sorted(expense_totals.items(),key=lambda x: x[1],reverse=True):
             if total > 0:
                 color = EXPENSES_COLORS[purpose]
-
-            st.markdown(f"""
-                <div style="
-                background-color:{color};
-                color:white;
-                padding:10px;
-                border-radius:10px;
-                margin-bottom:8px;
-                ">
-                {purpose}：{total:,}円
-                </div>
-                """,
-                unsafe_allow_html=True)
+                st.write(f"{purpose}：{total:,}円")
     
     sorted_expenses = sorted([e for e in expenses
                            if e["due_date"][:7] == target_month],
