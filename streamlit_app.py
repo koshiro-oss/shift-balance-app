@@ -108,88 +108,82 @@ def load_balance():
     result = (supabase.table("app_settings").select("current_balance").eq("id", 1).execute())
     return result.data[0]["current_balance"]
 
-
-
-tab1, tab2, tab3, tab4 = st.tabs(["ホーム","シフト","支出","設定"])
+#共通データ
+shifts = load_shifts()
+expenses = load_expenses()
+current_balance = load_balance()
 
 master = load_master()
-
 WORKPLACES = master["workplaces"]
 EXPENSES_COLORS = master["expense_colors"]
 
-#ホーム画面
-with tab1:
+months = []
+months = sorted(list(set([shift["pay_date"][:7] for shift in shifts] + [expense["due_date"][:7] for expense in expenses])))
 
-    #登録済みデータ取得
-    shifts = load_shifts()
-    expenses = load_expenses()
-    current_balance = load_balance()
-    #収支計算
-    st.subheader("収支計算")
-    months = []
-    months = sorted(list(set([shift["pay_date"][:7] for shift in shifts] + [expense["due_date"][:7] for expense in expenses])))
-
-    if not months:
-        months = [date.today().strftime("%Y-%m")]
-    year = date.today().year
-    month = date.today().month
-    for i in range(12):
-        current_month = month + i
-        current_year = year
-        while current_month > 12:
-            current_month -= 12
-            current_year += 1
-        months.append(f"{current_year}-{current_month:02d}")
-    target_month = st.selectbox("対象月",months)
-
-    #当月の月収の計算
-    def calculate_monthly_income(shifts, target_month):
-        monthly_income = 0  # 全体の総支給額
+if not months:
+    months = [date.today().strftime("%Y-%m")]
+year = date.today().year
+month = date.today().month
+for i in range(12):
+    current_month = month + i
+    current_year = year
+    while current_month > 12:
+        current_month -= 12
+        current_year += 1
+    months.append(f"{current_year}-{current_month:02d}")
+target_month = st.selectbox("対象月",months)
     
-        # 勤務地ごとの金額を保存する箱を、WORKPLACESから自動で作る
-        workplace_incomes = {workplace: 0 for workplace in WORKPLACES.keys()}
-        #↓こう書いてる
-        #workplace_incomes = {}
-        #for workplace in WORKPLACES.keys():
-        #workplace_incomes[workplace] = 0
-        for shift in shifts:
+#当月の月収の計算
+def calculate_monthly_income(shifts, target_month):
+    monthly_income = 0  # 全体の総支給額
+    # 勤務地ごとの金額を保存する箱を、WORKPLACESから自動で作る
+    workplace_incomes = {workplace: 0 for workplace in WORKPLACES.keys()}
+    #↓こう書いてる
+    #workplace_incomes = {}
+    #for workplace in WORKPLACES.keys():
+    #workplace_incomes[workplace] = 0
+    for shift in shifts:
         # 指定された支払月（pay_dateの「YYYY-MM」部分）が一致するかチェック
-            if target_month == shift["pay_date"][0:7]:
-                salary = shift["salary"]
-                wp = shift["workplace"]
+        if target_month == shift["pay_date"][0:7]:
+            salary = shift["salary"]
+            wp = shift["workplace"]
             
             # 全体の合計に足す
-                monthly_income += salary
+        monthly_income += salary
             
-            # 勤務地ごとの合計にも足す（WORKPLACESに含まれている勤務地なら）
-                if wp in workplace_incomes:
-                    workplace_incomes[wp] += salary
-            else:
-                monthly_income = monthly_income
-        return monthly_income, workplace_incomes
+        # 勤務地ごとの合計にも足す（WORKPLACESに含まれている勤務地なら）
+        if wp in workplace_incomes:
+            workplace_incomes[wp] += salary
+        else:
+            monthly_income = monthly_income
+    return monthly_income, workplace_incomes
 
-    #当月の支出
-    def calculate_monthly_expense(expenses,target_month):
-        monthly_expense = 0
-        for expense in expenses:
-            if target_month == expense["due_date"][0:7]:
-                monthly_expense = monthly_expense + expense["amount"]
-            else:
-                monthly_expense = monthly_expense
+#当月の支出
+def calculate_monthly_expense(expenses,target_month):
+    monthly_expense = 0
+    for expense in expenses:
+        if target_month == expense["due_date"][0:7]:
+            monthly_expense = monthly_expense + expense["amount"]
+        else:
+            monthly_expense = monthly_expense
 
-        #st.metric("支出予定", f"{monthly_expense}円")
-        return monthly_expense
+    #st.metric("支出予定", f"{monthly_expense}円")
+    return monthly_expense
 
-    #当月の不足額
-    def calculate_balance(monthly_income, monthly_expense, target_month):
-        balance = monthly_income - monthly_expense
-        return balance
+#当月の不足額
+def calculate_balance(monthly_income, monthly_expense, target_month):
+    balance = monthly_income - monthly_expense
+    return balance
 
-    monthly_income = calculate_monthly_income(shifts,target_month)[0]
-    workplace_incomes = calculate_monthly_income(shifts,target_month)[1]
-    monthly_expense = calculate_monthly_expense(expenses,target_month)
-    balance = calculate_balance(monthly_income, monthly_expense, target_month)
+monthly_income = calculate_monthly_income(shifts,target_month)[0]
+workplace_incomes = calculate_monthly_income(shifts,target_month)[1]
+monthly_expense = calculate_monthly_expense(expenses,target_month)
+balance = calculate_balance(monthly_income, monthly_expense, target_month)
 
+future_balance = current_balance + balance
+balance_color = ( "#dcfce7"
+                 if future_balance >= 0
+                 else "#fee2e2")
 
 ### カレンダー ###
 calendar_events = []
@@ -396,9 +390,7 @@ calendar_state = st_calendar(
         "initialDate": f"{target_month}-01"
     },
     callbacks=["eventClick"],
-    key=f"calendar_{target_month}"
-
-)
+    key=f"calendar_{target_month}")
 #0：日曜,1：月曜
  #callbacks=["eventClick"]：イベントをクリックしたときの情報を取得する。
  #calendar_state：クリックされたイベントの情報を受け取る
@@ -454,11 +446,13 @@ if calendar_state and calendar_state.get("callback") == "eventClick":
         if expense is not None:
             show_event_detail("expense", expense)
 
-    future_balance = current_balance + balance
-    balance_color = (
-    "#dcfce7"
-    if future_balance >= 0
-    else "#fee2e2")
+tab1, tab2, tab3, tab4 = st.tabs(["ホーム","シフト","支出","設定"])
+
+#ホーム画面
+with tab1:
+
+    #収支計算
+    st.subheader("収支計算")
 
     st.markdown(
     f"""
