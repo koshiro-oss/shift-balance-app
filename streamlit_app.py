@@ -477,60 +477,51 @@ with tab1:
     st.markdown(
     f"""
     <div style="
-        background-color:{balance_color};
-        padding:25px;
-        border-radius:15px;
-        text-align:center;
-        margin-bottom:20px;
+        display:flex;
+        gap:8px;
+        justify-content:space-between;
     ">
-        <h3>予想残高</h3>
-        <h1>{future_balance:,}円</h1>
+        <div style="
+            background:#dbeafe;
+            padding:8px;
+            border-radius:10px;
+            flex:1;
+            text-align:center;
+        ">
+            <div style="font-size:14px;">収入</div>
+            <div style="font-size:18px;font-weight:bold;">
+                {monthly_income:,}円
+            </div>
+        </div>
+
+        <div style="
+            background:#fee2e2;
+            padding:8px;
+            border-radius:10px;
+            flex:1;
+            text-align:center;
+        ">
+            <div style="font-size:14px;">支出</div>
+            <div style="font-size:18px;font-weight:bold;">
+                {monthly_expense:,}円
+            </div>
+        </div>
+
+        <div style="
+            background:#dcfce7;
+            padding:8px;
+            border-radius:10px;
+            flex:1;
+            text-align:center;
+        ">
+            <div style="font-size:14px;">収支</div>
+            <div style="font-size:18px;font-weight:bold;">
+                {balance:,}円
+            </div>
+        </div>
     </div>
     """,
     unsafe_allow_html=True)
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.markdown(
-        f"""
-        <div style="
-        background-color:#dbeafe;
-        padding:15px;
-        border-radius:10px;
-        text-align:center;
-        ">
-        <h4>収入</h4>
-        <h3>{monthly_income:,}円</h3>
-        </div>
-        """,
-        unsafe_allow_html=True)
-
-    with col2:
-        st.markdown(
-        f"""
-        <div style="
-        background-color:#fee2e2;
-        padding:15px;
-        border-radius:10px;
-        text-align:center;
-        ">
-        <h4>支出</h4>
-        <h3>{monthly_expense:,}円</h3>
-        </div>
-        """,
-        unsafe_allow_html=True)
-
-    with col3:
-        st.markdown(
-        f"""
-        <div style="
-        background-color:#dcfce7;
-        padding:15px;
-        border-radius:10px;
-        text-align:center;
-        ">
-        <h4>収支</h4>
-        <h3>{balance:,}円</h3>
-        </div>""",unsafe_allow_html=True)
 
     st.subheader("労働時間不足")
     if balance<0:
