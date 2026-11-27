@@ -600,7 +600,7 @@ with tab2:
         if shift["work_date"] != current_date:
             current_date = shift["work_date"]
             st.divider()
-            st.markdown(f"### 📅 {current_date}")
+            st.markdown(f"#### 📅 {current_date}")
         
         color = WORKPLACES[shift["workplace"]]["color"]
         work_hours = (shift["end_time"] - shift["start_time"] - shift["break_minutes"] / 60)
@@ -702,7 +702,7 @@ with tab3:
         if expense["due_date"] != current_date:
             current_date = expense["due_date"]
             st.divider()
-            st.markdown(f"### 📅 {current_date}")
+            st.markdown(f"#### 📅 {current_date}")
 
         color = EXPENSES_COLORS[expense["purpose"]]
         with st.container(border=True):
