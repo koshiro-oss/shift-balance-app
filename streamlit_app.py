@@ -628,7 +628,7 @@ with tab3:
     st.subheader("登録済み支出")
     st.metric("対象月の支出予定総額",f"{monthly_expense}円")
 
-    with st.expander("カラーパレット"):
+    with st.expander("カテゴリー別支出"):
         st.subheader("カテゴリー別支出")
         expense_totals = {}
         for expense in expenses:
