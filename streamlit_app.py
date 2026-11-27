@@ -488,21 +488,17 @@ with tab1:
     </div>
     """,
     unsafe_allow_html=True)
-    st.markdown(
-    f"""
-    <div style="background:#dbeafe;padding:8px;">
-        収入 {monthly_income:,}円
-    </div>
+    col1, col2, col3 = st.columns(3)
 
-    <div style="background:#fee2e2;padding:8px;">
-        支出 {monthly_expense:,}円
-    </div>
+    with col1:
+        st.metric("収入", f"{monthly_income:,}円")
 
-    <div style="background:#dcfce7;padding:8px;">
-        収支 {balance:,}円
-    </div>
-    """,
-    unsafe_allow_html=True)
+    with col2:
+        st.metric("支出", f"{monthly_expense:,}円")
+
+    with col3:
+        st.metric("収支", f"{balance:,}円")
+
     st.subheader("労働時間不足")
     if balance<0:
         for workplace in list(WORKPLACES.keys()):
