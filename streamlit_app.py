@@ -476,49 +476,16 @@ with tab1:
 
     st.markdown(
     f"""
-    <div style="
-        display:flex;
-        gap:8px;
-        justify-content:space-between;
-    ">
-        <div style="
-            background:#dbeafe;
-            padding:8px;
-            border-radius:10px;
-            flex:1;
-            text-align:center;
-        ">
-            <div style="font-size:14px;">収入</div>
-            <div style="font-size:18px;font-weight:bold;">
-                {monthly_income:,}円
-            </div>
-        </div>
+    <div style="background:#dbeafe;padding:8px;">
+        収入 {monthly_income:,}円
+    </div>
 
-        <div style="
-            background:#fee2e2;
-            padding:8px;
-            border-radius:10px;
-            flex:1;
-            text-align:center;
-        ">
-            <div style="font-size:14px;">支出</div>
-            <div style="font-size:18px;font-weight:bold;">
-                {monthly_expense:,}円
-            </div>
-        </div>
+    <div style="background:#fee2e2;padding:8px;">
+        支出 {monthly_expense:,}円
+    </div>
 
-        <div style="
-            background:#dcfce7;
-            padding:8px;
-            border-radius:10px;
-            flex:1;
-            text-align:center;
-        ">
-            <div style="font-size:14px;">収支</div>
-            <div style="font-size:18px;font-weight:bold;">
-                {balance:,}円
-            </div>
-        </div>
+    <div style="background:#dcfce7;padding:8px;">
+        収支 {balance:,}円
     </div>
     """,
     unsafe_allow_html=True)
