@@ -148,14 +148,13 @@ def calculate_monthly_income(shifts, target_month):
             salary = shift["salary"]
             wp = shift["workplace"]
             
-            # 全体の合計に足す
-        monthly_income += salary
+            monthly_income += salary
             
-        # 勤務地ごとの合計にも足す（WORKPLACESに含まれている勤務地なら）
-        if wp in workplace_incomes:
-            workplace_incomes[wp] += salary
-        else:
-            monthly_income = monthly_income
+            # 勤務地ごとの合計にも足す（WORKPLACESに含まれている勤務地なら）
+            if wp in workplace_incomes:
+                workplace_incomes[wp] += salary
+            else:
+                monthly_income = monthly_income
     return monthly_income, workplace_incomes
 
 #当月の支出
