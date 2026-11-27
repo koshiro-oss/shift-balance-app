@@ -489,15 +489,48 @@ with tab1:
     """,
     unsafe_allow_html=True)
     col1, col2, col3 = st.columns(3)
-
     with col1:
-        st.metric("収入", f"{monthly_income:,}円")
+        st.markdown(
+        f"""
+        <div style="
+        background-color:#dbeafe;
+        padding:15px;
+        border-radius:10px;
+        text-align:center;
+        ">
+        <h4>収入</h4>
+        <h3>{monthly_income:,}円</h3>
+        </div>
+        """,
+        unsafe_allow_html=True)
 
     with col2:
-        st.metric("支出", f"{monthly_expense:,}円")
+        st.markdown(
+        f"""
+        <div style="
+        background-color:#fee2e2;
+        padding:15px;
+        border-radius:10px;
+        text-align:center;
+        ">
+        <h4>支出</h4>
+        <h3>{monthly_expense:,}円</h3>
+        </div>
+        """,
+        unsafe_allow_html=True)
 
     with col3:
-        st.metric("収支", f"{balance:,}円")
+        st.markdown(
+        f"""
+        <div style="
+        background-color:#dcfce7;
+        padding:15px;
+        border-radius:10px;
+        text-align:center;
+        ">
+        <h4>収支</h4>
+        <h3>{balance:,}円</h3>
+        </div>""",unsafe_allow_html=True)
 
     st.subheader("労働時間不足")
     if balance<0:
