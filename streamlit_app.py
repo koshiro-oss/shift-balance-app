@@ -556,6 +556,7 @@ with tab2:
     for wp in list(WORKPLACES.keys()):
         st.write(f"{wp}の収入:"f"{workplace_incomes[wp]}円")
     #シフト入力
+    st.subheader("新規シフト登録")
     workplace = st.selectbox("勤務先",list(WORKPLACES.keys()))
     work_date = st.date_input("勤務日")
     start_time_input = st.time_input("開始時間",value=datetime.strptime("09:00", "%H:%M").time())
