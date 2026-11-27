@@ -551,12 +551,11 @@ with tab1:
 
 #シフト入力専用画面
 with tab2:
-    #登録済みシフト(削除ボタン)
     st.subheader("登録済みシフト")
     st.metric("収入予定",f"{monthly_income}円")
     for wp in list(WORKPLACES.keys()):
         st.write(f"{wp}の収入:"f"{workplace_incomes[wp]}円")
-#シフト入力
+    #シフト入力
     workplace = st.selectbox("勤務先",list(WORKPLACES.keys()))
     work_date = st.date_input("勤務日")
     start_time_input = st.time_input("開始時間",value=datetime.strptime("09:00", "%H:%M").time())
@@ -614,11 +613,14 @@ with tab2:
             
             shift_id = shift["id"]
             
-            if st.button("削除",key=f"delete_{shift_id}"):
-                shifts[:] = [s for s in shifts
-                         if s["id"] != shift_id]
-                delete_shift(shift_id)
-                st.rerun()    
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button("編集",key=f"edit_shift_{shift_id}"):
+                                show_event_detail("shift",shift)
+            with col2:
+                if st.button("削除",key=f"delete_{shift_id}"):
+                                delete_shift(shift_id)
+                                st.rerun()   
     
 #出費入力専用画面
 with tab3:
@@ -670,11 +672,14 @@ with tab3:
             st.write(f"💰 {expense['amount']}円")
             
             expense_id = expense["id"]
-            if st.button("削除",key=f"expense_delete_{expense_id}"):
-                expenses[:] = [e for e in expenses
-                               if e["id"] != expense_id]
-                delete_expense(expense_id)
-                st.rerun()
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button("編集",key=f"edit_expense_{expense_id}"):
+                    show_event_detail("expense",expense)
+            with col2:
+                if st.button("削除",key=f"expense_delete_{expense_id}"):
+                    delete_expense(expense_id)
+                    st.rerun()
 
 
 with tab4:
