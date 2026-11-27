@@ -653,17 +653,19 @@ with tab3:
         "🧳 旅行": "旅行",
         "✨ その他": "その他"}
     selected_display = st.pills("カテゴリー",list(expense_options.keys()),selection_mode="single")
-    purpose = expense_options[selected_display]
+    if selected_display:
+        purpose = expense_options[selected_display]
 
     register2 = st.button("支出登録",use_container_width=True)
 
     if register2:
-        new_expenses = {"id": str(uuid.uuid4()),"purpose": purpose,"memo": memo,"due_date": str(due_date),"amount": int(amount)}
-
-        expenses = load_expenses()
-        save_expense(new_expenses)
-
-        st.write("登録しました")
+        if not purpose:
+            st.error("カテゴリーを選択してください")
+        else:
+            new_expenses = {"id": str(uuid.uuid4()),"purpose": purpose,"memo": memo,"due_date": str(due_date),"amount": int(amount)}
+            expenses = load_expenses()
+            save_expense(new_expenses)
+            st.success("登録しました")
 
     st.subheader("登録済み支出")
     for expense in sorted_expenses:
