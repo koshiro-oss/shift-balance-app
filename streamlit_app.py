@@ -560,7 +560,7 @@ with tab2:
     workplace = st.selectbox("勤務先",list(WORKPLACES.keys()))
     work_date = st.date_input("勤務日")
     start_time_input = st.time_input("開始時間",value=datetime.strptime("09:00", "%H:%M").time())
-    end_time_input = st.time_input("終了時間",value=datetime.strptime("017:00", "%H:%M").time())
+    end_time_input = st.time_input("終了時間",value=datetime.strptime("17:00", "%H:%M").time())
     break_minutes = st.selectbox("休憩時間",[0,15,30,45,60])
     hourly_wage = WORKPLACES[workplace]["hourly_wage"]
 
