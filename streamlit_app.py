@@ -476,6 +476,20 @@ with tab1:
 
     st.markdown(
     f"""
+    <div style="
+        background-color:{balance_color};
+        padding:25px;
+        border-radius:15px;
+        text-align:center;
+        margin-bottom:20px;
+    ">
+        <h3>予想残高</h3>
+        <h1>{future_balance:,}円</h1>
+    </div>
+    """,
+    unsafe_allow_html=True)
+    st.markdown(
+    f"""
     <div style="background:#dbeafe;padding:8px;">
         収入 {monthly_income:,}円
     </div>
@@ -489,7 +503,6 @@ with tab1:
     </div>
     """,
     unsafe_allow_html=True)
-
     st.subheader("労働時間不足")
     if balance<0:
         for workplace in list(WORKPLACES.keys()):
