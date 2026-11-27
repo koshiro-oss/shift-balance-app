@@ -634,18 +634,12 @@ with tab3:
     
     #出費入力
     st.subheader("新規支出登録")
-    purpose = st.selectbox("項目",list(EXPENSES_COLORS.keys()))
-    memo = st.text_input("メモ")
     due_date = st.date_input("使用日")
-    amount = st.number_input("料金")
-    #内容表示
-    st.write("出費")
-    st.write("項目:",purpose)
-    st.write("メモ:",memo)
-    st.write("使用日:",due_date)
-    st.write("料金:",amount)
+    memo = st.text_input("メモ")
+    amount = st.number_input("料金",min_value=0,step=100)
+    purpose = st.radio("カテゴリー",list(EXPENSES_COLORS.keys()),horizontal=True)
 
-    register2 = st.button("支出登録")
+    register2 = st.button("支出登録",use_container_width=True)
 
     if register2:
         new_expenses = {"id": str(uuid.uuid4()),"purpose": purpose,"memo": memo,"due_date": str(due_date),"amount": int(amount)}
