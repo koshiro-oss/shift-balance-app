@@ -637,12 +637,23 @@ with tab3:
     due_date = st.date_input("使用日")
     memo = st.text_input("メモ")
     amount = st.number_input("料金",min_value=0,step=100)
-    
-    #col1, col2 = st.columns(2)
-    categories = list(EXPENSES_COLORS.keys())
-    #left = categories[::2]
-    #right = categories[1::2]
-    purpose = st.pills("カテゴリー",categories,selection_mode="single")
+
+    expense_options = {
+        "🍽️ 食費": "食費",
+        "🚃 交通費": "交通費",
+        "🏀 部活関連": "部活関連",
+        "💗 交際費": "交際費",
+        "👕 ファッション": "ファッション",
+        "✂️ ヘアケア": "ヘアケア",
+        "🧖 スキンケア": "スキンケア",
+        "💊 医療": "医療",
+        "⭐ 遊び": "遊び",
+        "🧼 日用品": "日用品",
+        "✏️ 勉強": "勉強",
+        "🧳 旅行": "旅行",
+        "✨ その他": "その他"}
+    selected_display = st.pills("カテゴリー",list(expense_options.keys()),selection_mode="single")
+    purpose = expense_options[selected_display]
 
     register2 = st.button("支出登録",use_container_width=True)
 
